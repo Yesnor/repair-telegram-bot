@@ -1,0 +1,21 @@
+{
+  "name": "repair-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram-бот приёма заявок на ремонт (электрика/сантехника/прочее) с Google Sheets в качестве БД",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "node localDev.js",
+    "set-webhook": "node scripts/setWebhook.js",
+    "init-sheets": "node scripts/initSheets.js"
+  },
+  "dependencies": {
+    "googleapis": "^140.0.1",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

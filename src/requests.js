@@ -1,0 +1,75 @@
+const { getRows, appendRow, updateRow } = require('./sheetsClient');
+
+const SHEET = 'Заявки';
+
+const STATUS = {
+  NEW: 'Получена от клиента',
+  TAKEN: 'Взята в работу',
+  DEPARTED: 'Выехал на место',
+  CLOSED: 'Закрыта',
+};
+
+// Порядок колонок листа "Заявки" — должен совпадать с заголовком в таблице.
+const COLUMNS = [
+  'id', 'createdAt', 'clientId', 'clientName', 'phone', 'category',
+  'description', 'address', 'convenientTime', 'status',
+  'employeeId', 'employeeName', 'takenAt', 'departedAt', 'closedAt',
+  'notifiedMessages',
+];
+
+function rowToObject(row) {
+  const obj = {};
+  COLUMNS.forEach((key, i) => { obj[key] = row[i] !== undefined ? row[i] : ''; });
+  return obj;
+}
+
+function objectToRow(obj) {
+  return COLUMNS.map((key) => (obj[key] !== undefined ? obj[key] : ''));
+}
+
+function generateId() {
+  return `R${Date.now()}`;
+}
+
+async function createRequest(data) {
+  const obj = {
+    id: generateId(),
+    createdAt: new Date().toISOString(),
+    clientId: data.clientId,
+    clientName: data.clientName || '',
+    phone: data.phone || '',
+    category: data.category,
+    description: data.description,
+    address: data.address,
+    convenientTime: data.convenientTime,
+    status: STATUS.NEW,
+    employeeId: '',
+    employeeName: '',
+    takenAt: '',
+    departedAt: '',
+    closedAt: '',
+    notifiedMessages: '[]',
+  };
+  await appendRow(SHEET, objectToRow(obj));
+  return obj;
+}
+
+/**
+ * Находит заявку по ID. Возвращает { rowNumber, data } либо null.
+ * rowNumber — номер строки в самом листе (для последующего updateRow).
+ */
+async function findRequestById(id) {
+  const rows = await getRows(SHEET);
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i][0] === id) {
+      return { rowNumber: i + 2, data: rowToObject(rows[i]) };
+    }
+  }
+  return null;
+}
+
+async function saveRequest(rowNumber, obj) {
+  await updateRow(SHEET, rowNumber, objectToRow(obj));
+}
+
+module.exports = { STATUS, COLUMNS, createRequest, findRequestById, saveRequest };
