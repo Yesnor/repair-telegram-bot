@@ -1,4 +1,4 @@
-const { google } = require('googleapis');
+const { google } = require("googleapis");
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
@@ -14,12 +14,12 @@ async function getSheets() {
   const auth = new google.auth.JWT(
     process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     null,
-    (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    ['https://www.googleapis.com/auth/spreadsheets']
+    (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"],
   );
   await auth.authorize();
 
-  cachedSheetsApi = google.sheets({ version: 'v4', auth });
+  cachedSheetsApi = google.sheets({ version: "v4", auth });
   return cachedSheetsApi;
 }
 
@@ -27,7 +27,7 @@ async function getSheets() {
  * Преобразует номер столбца (1-based) в букву столбца A1-нотации (1 -> A, 27 -> AA и т.д.)
  */
 function colLetter(n) {
-  let s = '';
+  let s = "";
   while (n > 0) {
     const m = (n - 1) % 26;
     s = String.fromCharCode(65 + m) + s;
@@ -57,8 +57,11 @@ async function appendRow(sheetName, row) {
   await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
     range: `${sheetName}!A1`,
-    valueInputOption: 'USER_ENTERED',
-    insertDataOption: 'INSERT_ROWS',
+    // RAW — записываем строки как есть, без автораспознавания Google Sheets.
+    // USER_ENTERED ломает строки с двоеточиями (ключи сессий вида "chatId:userId",
+    // ISO-даты, JSON), интерпретируя их как время/дату.
+    valueInputOption: "RAW",
+    insertDataOption: "INSERT_ROWS",
     requestBody: { values: [row] },
   });
 }
@@ -71,7 +74,7 @@ async function updateRow(sheetName, rowNumber, row) {
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
     range: `${sheetName}!A${rowNumber}:${colLetter(row.length)}${rowNumber}`,
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: "RAW",
     requestBody: { values: [row] },
   });
 }
