@@ -27,6 +27,14 @@ const CATEGORIES = [
   "Другое",
 ];
 
+function categoryKeyboard() {
+  return Markup.inlineKeyboard(
+    CATEGORIES.map((category) => [
+      Markup.button.callback(category, `cat:${category}`),
+    ]),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Сцена (FSM) оформления заявки клиентом
 // ---------------------------------------------------------------------------
@@ -38,9 +46,7 @@ const requestWizard = new Scenes.WizardScene(
   async (ctx) => {
     await ctx.reply(
       "Выберите категорию услуги:",
-      Markup.inlineKeyboard(
-        CATEGORIES.map((c) => Markup.button.callback(c, `cat:${c}`)),
-      ),
+      categoryKeyboard(),
     );
     return ctx.wizard.next();
   },
@@ -537,4 +543,4 @@ bot.catch((err, ctx) => {
   console.error(`Ошибка при обработке update ${ctx.updateType}:`, err);
 });
 
-module.exports = { bot };
+module.exports = { bot, categoryKeyboard };

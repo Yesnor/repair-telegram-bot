@@ -35,4 +35,6 @@ change.
 
 ## Session Notes
 
+- Category buttons are now rendered one per row so full labels remain readable; added a focused Jest test for the keyboard layout.
+
 - Изменения в `README.md` и `src/bot.js` существовали до этой задачи и не изменялись.

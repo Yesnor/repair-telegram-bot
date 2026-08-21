@@ -26,8 +26,16 @@ jest.mock("../src/employees", () => ({
   getActiveEmployeesByCategory: jest.fn(),
 }));
 
-const { bot } = require("../src/bot");
+const { bot, categoryKeyboard } = require("../src/bot");
 const { STATUS } = require("../src/requests");
+
+test("показывает каждую категорию отдельной строкой без обрезания текста", () => {
+  const rows = categoryKeyboard().reply_markup.inline_keyboard;
+
+  expect(rows).toHaveLength(11);
+  expect(rows.every((row) => row.length === 1)).toBe(true);
+  expect(rows.map(([button]) => button.text)).toContain("Холодильное оборудование");
+});
 
 const employee = { telegramId: "42", name: "Анна", category: "Электрика" };
 const request = () => ({
