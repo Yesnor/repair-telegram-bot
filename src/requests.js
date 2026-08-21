@@ -86,19 +86,33 @@ async function saveRequest(rowNumber, obj) {
   await updateRow(SHEET, rowNumber, objectToRow(obj));
 }
 
-/**
- * Возвращает активные (не закрытые) заявки, взятые конкретным сотрудником —
- * то есть в статусе "Взята в работу" или "Выехал на место".
- */
+// Возвращает { rowNumber, data } для всех новых (ещё не взятых) заявок категории.
+async function getNewRequestsByCategory(category) {
+  const rows = await getRows(SHEET);
+  const result = [];
+  rows.forEach((row, i) => {
+    const data = rowToObject(row);
+    if (data.category === category && data.status === STATUS.NEW) {
+      result.push({ rowNumber: i + 2, data });
+    }
+  });
+  return result;
+}
+
+// Возвращает { rowNumber, data } для заявок, взятых сотрудником и ещё не закрытых.
 async function getActiveRequestsByEmployee(employeeId) {
   const rows = await getRows(SHEET);
-  return rows
-    .map(rowToObject)
-    .filter(
-      (r) =>
-        String(r.employeeId) === String(employeeId) &&
-        (r.status === STATUS.TAKEN || r.status === STATUS.DEPARTED),
-    );
+  const result = [];
+  rows.forEach((row, i) => {
+    const data = rowToObject(row);
+    if (
+      String(data.employeeId) === String(employeeId) &&
+      (data.status === STATUS.TAKEN || data.status === STATUS.DEPARTED)
+    ) {
+      result.push({ rowNumber: i + 2, data });
+    }
+  });
+  return result;
 }
 
 module.exports = {
@@ -107,5 +121,6 @@ module.exports = {
   createRequest,
   findRequestById,
   saveRequest,
+  getNewRequestsByCategory,
   getActiveRequestsByEmployee,
 };

@@ -5,6 +5,7 @@ const {
   findRequestById,
   saveRequest,
   getActiveRequestsByEmployee,
+  getNewRequestsByCategory,
   STATUS,
 } = require("./requests");
 const {
@@ -168,6 +169,87 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
   }
 }
 
+function employeeMenuKeyboard() {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback("🆕 Заявки моей категории", "menu:new")],
+    [Markup.button.callback("✅ Мои принятые заявки", "menu:mine")],
+  ]);
+}
+
+// Показывает необработанные заявки категории сотрудника с кнопкой "Взять в работу".
+async function showNewCategoryRequests(ctx, employee) {
+  const found = await getNewRequestsByCategory(employee.category);
+  if (!found.length) {
+    await ctx.reply("Новых заявок в вашей категории пока нет.");
+    return;
+  }
+
+  for (const { rowNumber, data } of found) {
+    const msg = await ctx.telegram.sendMessage(
+      ctx.chat.id,
+      `🆕 Заявка №${data.id}\n` +
+        `Категория: ${data.category}\n` +
+        `Адрес: ${data.address}\n` +
+        `Описание: ${data.description}\n` +
+        `Удобное время: ${data.convenientTime}\n` +
+        `Телефон клиента: ${data.phone}`,
+      Markup.inlineKeyboard([
+        Markup.button.callback("Взять в работу", `take:${data.id}`),
+      ]),
+    );
+
+    // Регистрируем сообщение, чтобы его можно было пометить неактуальным,
+    // если заявку возьмёт другой сотрудник (см. markOtherNotifications).
+    let notified = [];
+    try {
+      notified = JSON.parse(data.notifiedMessages || "[]");
+    } catch {
+      notified = [];
+    }
+    notified.push({ chatId: ctx.chat.id, messageId: msg.message_id });
+    data.notifiedMessages = JSON.stringify(notified);
+    await saveRequest(rowNumber, data);
+  }
+}
+
+// Показывает заявки, уже взятые сотрудником, с кнопками в зависимости от статуса.
+async function showMyAcceptedRequests(ctx, employee) {
+  const found = await getActiveRequestsByEmployee(employee.telegramId);
+  if (!found.length) {
+    await ctx.reply("У вас нет принятых заявок в работе.");
+    return;
+  }
+
+  for (const { data } of found) {
+    const text =
+      `Заявка №${data.id}\n` +
+      `Статус: ${data.status}\n` +
+      `Категория: ${data.category}\n` +
+      `Адрес: ${data.address}\n` +
+      `Описание: ${data.description}\n` +
+      `Телефон клиента: ${data.phone}`;
+
+    const buttons =
+      data.status === STATUS.TAKEN
+        ? [
+            [Markup.button.callback("🚗 Выехал на место", `depart:${data.id}`)],
+            [
+              Markup.button.callback(
+                "↩️ Отказаться от заявки",
+                `decline:${data.id}`,
+              ),
+            ],
+          ]
+        : [[Markup.button.callback("☑️ Закрыть заявку", `close:${data.id}`)]];
+
+    await ctx.telegram.sendMessage(
+      ctx.chat.id,
+      text,
+      Markup.inlineKeyboard(buttons),
+    );
+  }
+}
+
 async function notifyClient(ctx, requestData, text) {
   try {
     await ctx.telegram.sendMessage(requestData.clientId, text);
@@ -218,10 +300,13 @@ bot.start(async (ctx) => {
     await ctx.reply(
       `Здравствуйте, ${employee.name}!\n` +
         `Вы закреплены за категорией «${employee.category}». ` +
-        `Новые заявки этой категории будут приходить сюда автоматически.`,
+        `Новые заявки этой категории будут приходить сюда автоматически.\n\n` +
+        `Также можно посмотреть заявки вручную:`,
+      employeeMenuKeyboard(),
     );
     return;
   }
+
   await ctx.reply(
     "Здравствуйте! Я помогу оформить заявку на ремонт (электрика, сантехника, другое).",
     Markup.inlineKeyboard([
@@ -236,6 +321,41 @@ bot.action("new_request", async (ctx) => {
 });
 
 // --- Кнопки сотрудника -------------------------------------------------
+bot.action("menu:new", async (ctx) => {
+  const employee = await getEmployeeByTelegramId(ctx.from.id);
+  if (!employee) {
+    await ctx.answerCbQuery("Вы не зарегистрированы как сотрудник.", {
+      show_alert: true,
+    });
+    return;
+  }
+  await ctx.answerCbQuery();
+  await showNewCategoryRequests(ctx, employee);
+});
+
+bot.action("menu:mine", async (ctx) => {
+  const employee = await getEmployeeByTelegramId(ctx.from.id);
+  if (!employee) {
+    await ctx.answerCbQuery("Вы не зарегистрированы как сотрудник.", {
+      show_alert: true,
+    });
+    return;
+  }
+  await ctx.answerCbQuery();
+  await showMyAcceptedRequests(ctx, employee);
+});
+
+// Текстовые команды-алиасы для тех же двух списков.
+bot.command("newrequests", async (ctx) => {
+  const employee = await getEmployeeByTelegramId(ctx.from.id);
+  if (!employee) {
+    await ctx.reply(
+      "Эта команда доступна только зарегистрированным сотрудникам.",
+    );
+    return;
+  }
+  await showNewCategoryRequests(ctx, employee);
+});
 
 bot.command("myrequests", async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
@@ -245,22 +365,7 @@ bot.command("myrequests", async (ctx) => {
     );
     return;
   }
-
-  const active = await getActiveRequestsByEmployee(employee.telegramId);
-  if (!active.length) {
-    await ctx.reply("У вас нет активных заявок в работе.");
-    return;
-  }
-
-  const lines = active.map(
-    (r) =>
-      `Заявка №${r.id} (${r.status})\n` +
-      `Категория: ${r.category}\n` +
-      `Адрес: ${r.address}\n` +
-      `Телефон клиента: ${r.phone}`,
-  );
-
-  await ctx.reply(`Ваши активные заявки:\n\n${lines.join("\n\n")}`);
+  await showMyAcceptedRequests(ctx, employee);
 });
 
 bot.action(/^take:(.+)$/, async (ctx) => {
