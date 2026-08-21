@@ -1,30 +1,44 @@
-const { getRows, appendRow, updateRow } = require('./sheetsClient');
+const { getRows, appendRow, updateRow } = require("./sheetsClient");
 
-const SHEET = 'Заявки';
+const SHEET = "Заявки";
 
 const STATUS = {
-  NEW: 'Получена от клиента',
-  TAKEN: 'Взята в работу',
-  DEPARTED: 'Выехал на место',
-  CLOSED: 'Закрыта',
+  NEW: "Получена от клиента",
+  TAKEN: "Взята в работу",
+  DEPARTED: "Выехал на место",
+  CLOSED: "Закрыта",
 };
 
 // Порядок колонок листа "Заявки" — должен совпадать с заголовком в таблице.
 const COLUMNS = [
-  'id', 'createdAt', 'clientId', 'clientName', 'phone', 'category',
-  'description', 'address', 'convenientTime', 'status',
-  'employeeId', 'employeeName', 'takenAt', 'departedAt', 'closedAt',
-  'notifiedMessages',
+  "id",
+  "createdAt",
+  "clientId",
+  "clientName",
+  "phone",
+  "category",
+  "description",
+  "address",
+  "convenientTime",
+  "status",
+  "employeeId",
+  "employeeName",
+  "takenAt",
+  "departedAt",
+  "closedAt",
+  "notifiedMessages",
 ];
 
 function rowToObject(row) {
   const obj = {};
-  COLUMNS.forEach((key, i) => { obj[key] = row[i] !== undefined ? row[i] : ''; });
+  COLUMNS.forEach((key, i) => {
+    obj[key] = row[i] !== undefined ? row[i] : "";
+  });
   return obj;
 }
 
 function objectToRow(obj) {
-  return COLUMNS.map((key) => (obj[key] !== undefined ? obj[key] : ''));
+  return COLUMNS.map((key) => (obj[key] !== undefined ? obj[key] : ""));
 }
 
 function generateId() {
@@ -36,19 +50,19 @@ async function createRequest(data) {
     id: generateId(),
     createdAt: new Date().toISOString(),
     clientId: data.clientId,
-    clientName: data.clientName || '',
-    phone: data.phone || '',
+    clientName: data.clientName || "",
+    phone: data.phone || "",
     category: data.category,
     description: data.description,
     address: data.address,
     convenientTime: data.convenientTime,
     status: STATUS.NEW,
-    employeeId: '',
-    employeeName: '',
-    takenAt: '',
-    departedAt: '',
-    closedAt: '',
-    notifiedMessages: '[]',
+    employeeId: "",
+    employeeName: "",
+    takenAt: "",
+    departedAt: "",
+    closedAt: "",
+    notifiedMessages: "[]",
   };
   await appendRow(SHEET, objectToRow(obj));
   return obj;
@@ -72,4 +86,25 @@ async function saveRequest(rowNumber, obj) {
   await updateRow(SHEET, rowNumber, objectToRow(obj));
 }
 
-module.exports = { STATUS, COLUMNS, createRequest, findRequestById, saveRequest };
+/**
+ * Возвращает активные (не закрытые) заявки, взятые конкретным сотрудником —
+ * то есть в статусе "Взята в работу" или "Выехал на место".
+ */
+async function getActiveRequestsByEmployee(employeeId) {
+  const rows = await getRows(SHEET);
+  return rows
+    .map(rowToObject)
+    .filter(
+      (r) =>
+        String(r.employeeId) === String(employeeId) &&
+        (r.status === STATUS.TAKEN || r.status === STATUS.DEPARTED),
+    );
+}
+
+module.exports = {
+  STATUS,
+  COLUMNS,
+  createRequest,
+  findRequestById,
+  saveRequest,
+};

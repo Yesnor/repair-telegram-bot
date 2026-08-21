@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "node localDev.js",
     "set-webhook": "node scripts/setWebhook.js",
+    "delete-webhook": "node scripts/deleteWebhook.js",
     "init-sheets": "node scripts/initSheets.js"
   },
   "dependencies": {
