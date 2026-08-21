@@ -5,27 +5,28 @@ change.
 
 ## Current Phase
 
-- [e.g. Not started / In progress / Complete]
+- Complete
 
 ## Current Goal
 
-- [What you are building right now]
+- Добавить Jest-тесты для основных слоёв приложения и webhook.
 
 ## Completed
 
-- None yet.
+- Добавлена команда `npm test` и зависимость Jest.
+- Добавлены тесты для работы с заявками, сотрудниками, Google Sheets и webhook.
 
 ## In Progress
 
-- None yet.
+- Тестовый набор успешно проходит: 5 suites, 18 tests.
 
 ## Next Up
 
-- [First unit to build]
+- Следующий этап — расширять интеграционные тесты при изменении функционала.
 
 ## Open Questions
 
-- [Any unresolved product or technical decisions]
+- Интеграционные тесты с реальным Telegram и Google Sheets не входят в локальный набор; внешние API замокированы.
 
 ## Architecture Decisions
 
@@ -34,4 +35,4 @@ change.
 
 ## Session Notes
 
-- [Context needed to resume work in the next session]
+- Изменения в `README.md` и `src/bot.js` существовали до этой задачи и не изменялись.

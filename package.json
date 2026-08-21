@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "node localDev.js",
+    "test": "jest --runInBand",
     "set-webhook": "node scripts/setWebhook.js",
     "delete-webhook": "node scripts/deleteWebhook.js",
     "init-sheets": "node scripts/initSheets.js"
@@ -17,6 +18,7 @@
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "jest": "^30.4.2"
   }
 }
