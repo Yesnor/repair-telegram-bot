@@ -107,4 +107,5 @@ module.exports = {
   createRequest,
   findRequestById,
   saveRequest,
+  getActiveRequestsByEmployee,
 };
