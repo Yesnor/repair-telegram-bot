@@ -1,5 +1,6 @@
 const { Telegraf, Scenes, session, Markup } = require("telegraf");
 const { sessionStore } = require("./sessionStore");
+const { formatTimestamp } = require("./dateUtils");
 const {
   createRequest,
   findRequestById,
@@ -417,7 +418,7 @@ bot.action(/^take:(.+)$/, async (ctx) => {
   found.data.status = STATUS.TAKEN;
   found.data.employeeId = employee.telegramId;
   found.data.employeeName = employee.name;
-  found.data.takenAt = new Date().toISOString();
+  found.data.takenAt = formatTimestamp();
   await saveRequest(found.rowNumber, found.data);
 
   await ctx.answerCbQuery("Заявка взята в работу!");
@@ -462,7 +463,7 @@ bot.action(/^depart:(.+)$/, async (ctx) => {
   }
 
   found.data.status = STATUS.DEPARTED;
-  found.data.departedAt = new Date().toISOString();
+  found.data.departedAt = formatTimestamp();
   await saveRequest(found.rowNumber, found.data);
 
   await ctx.answerCbQuery("Отмечено: выехал на место.");
@@ -495,7 +496,7 @@ bot.action(/^close:(.+)$/, async (ctx) => {
   }
 
   found.data.status = STATUS.CLOSED;
-  found.data.closedAt = new Date().toISOString();
+  found.data.closedAt = formatTimestamp();
   await saveRequest(found.rowNumber, found.data);
 
   await ctx.answerCbQuery("Заявка закрыта.");

@@ -6,7 +6,7 @@ const {
   saveRequest,
   STATUS,
   COLUMNS,
-} = require("../trash/requests");
+} = require("../src/requests");
 
 describe("createRequest", () => {
   beforeEach(() => {

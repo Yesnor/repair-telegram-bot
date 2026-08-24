@@ -1,7 +1,6 @@
 # Progress Tracker
 
-Update this file after every meaningful implementation
-change.
+Update this file after every meaningful implementation change.
 
 ## Current Phase
 
@@ -9,34 +8,34 @@ change.
 
 ## Current Goal
 
-- Добавить Jest-тесты для основных слоёв приложения и webhook.
+- Wire the shared date-formatting helper into every Google Sheets timestamp write.
 
 ## Completed
 
-- Добавлена команда `npm test` и зависимость Jest.
-- Добавлены тесты для работы с заявками, сотрудниками, Google Sheets и webhook.
+- Added `npm test` and Jest dependency.
+- Added tests for requests, employees, Google Sheets, and webhook behavior.
+- Wired `formatTimestamp()` into request creation, request status transitions, and session `UpdatedAt` writes.
+- Added focused tests covering the timestamp formatter usage.
+- Fixed the stale `../trash/requests` import in `tests/requests.test.js`.
 
 ## In Progress
 
-- Тестовый набор успешно проходит: 5 suites, 18 tests.
+- Test suite passes: 6 suites, 22 tests.
 
 ## Next Up
 
-- Следующий этап — расширять интеграционные тесты при изменении функционала.
+- Expand integration tests when functionality changes again.
 
 ## Open Questions
 
-- Интеграционные тесты с реальным Telegram и Google Sheets не входят в локальный набор; внешние API замокированы.
+- Integration tests against live Telegram and Google Sheets are not part of the local suite; external APIs remain mocked.
 
 ## Architecture Decisions
 
-- [Decisions made that affect the system design or
-  data model — include why the decision was made]
+- [Decisions made that affect the system design or data model - include why the decision was made]
 
 ## Session Notes
 
 - `scripts/initSheets.js` and `src/sheetsClient.js` now share one Sheets auth path that supports both inline keys and `GOOGLE_APPLICATION_CREDENTIALS`.
-
 - Category buttons are now rendered one per row so full labels remain readable; added a focused Jest test for the keyboard layout.
-
-- Изменения в `README.md` и `src/bot.js` существовали до этой задачи и не изменялись.
+- Shared Google Sheets timestamp writes now use `src/dateUtils.js` across request creation, status transitions, and session persistence.

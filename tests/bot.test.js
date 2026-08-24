@@ -3,6 +3,9 @@ process.env.BOT_TOKEN = "test-token";
 jest.mock("../src/sessionStore", () => ({
   sessionStore: { get: jest.fn(), set: jest.fn(), delete: jest.fn() },
 }));
+jest.mock("../src/dateUtils", () => ({
+  formatTimestamp: jest.fn(() => "2024-03-10_12:00:00"),
+}));
 jest.mock("../src/sheetsClient", () => ({
   getRows: jest.fn(),
   appendRow: jest.fn(),
@@ -80,6 +83,7 @@ test("первый сотрудник берёт новую заявку, а п�
     status: STATUS.TAKEN,
     employeeId: "42",
     employeeName: "Анна",
+    takenAt: "2024-03-10_12:00:00",
   });
   expect(mockSaveRequest).toHaveBeenCalledWith(2, found.data);
 
@@ -94,8 +98,10 @@ test("сотрудник проходит статусы выезда и зак�
 
   await bot.handleUpdate(callback("depart:R1"));
   expect(found.data.status).toBe(STATUS.DEPARTED);
+  expect(found.data.departedAt).toBe("2024-03-10_12:00:00");
   await bot.handleUpdate(callback("close:R1"));
   expect(found.data.status).toBe(STATUS.CLOSED);
+  expect(found.data.closedAt).toBe("2024-03-10_12:00:00");
   expect(mockSaveRequest).toHaveBeenCalledTimes(2);
 });
 

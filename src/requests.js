@@ -1,3 +1,4 @@
+const { formatTimestamp } = require("./dateUtils");
 const { getRows, appendRow, updateRow } = require("./sheetsClient");
 
 const SHEET = "Заявки";
@@ -48,7 +49,7 @@ function generateId() {
 async function createRequest(data) {
   const obj = {
     id: generateId(),
-    createdAt: new Date().toISOString(),
+    createdAt: formatTimestamp(),
     clientId: data.clientId,
     clientName: data.clientName || "",
     phone: data.phone || "",
