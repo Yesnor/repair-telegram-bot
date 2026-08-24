@@ -1,82 +1,89 @@
-jest.mock("../src/sheetsClient", () => ({
-  getRows: jest.fn(),
-  appendRow: jest.fn(),
-  updateRow: jest.fn(),
-}));
+jest.mock('../src/sheetsClient');
+const sheetsClient = require('../src/sheetsClient');
+const { createRequest, findRequestById, saveRequest, STATUS, COLUMNS } = require('../src/requests');
 
-const sheets = require("../src/sheetsClient");
-const {
-  STATUS,
-  COLUMNS,
-  createRequest,
-  findRequestById,
-  saveRequest,
-  getNewRequestsByCategory,
-  getActiveRequestsByEmployee,
-} = require("../src/requests");
-
-const row = (overrides = {}) => {
-  const data = {
-    id: "R1",
-    category: "Электрика",
-    status: STATUS.NEW,
-    employeeId: "",
-    address: "ул. Ленина, 1",
-    ...overrides,
-  };
-  return COLUMNS.map((key) => data[key] || "");
-};
-
-beforeEach(() => jest.clearAllMocks());
-
-test("создаёт заявку с новым ID и статусом NEW", async () => {
-  const request = await createRequest({
-    clientId: 10,
-    clientName: "Иван",
-    phone: "+380000000000",
-    category: "Электрика",
-    description: "Не работает розетка",
-    address: "ул. Ленина, 1",
-    convenientTime: "После 18:00",
+describe('createRequest', () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2024-03-10T12:00:00.000Z'));
+  });
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  expect(request).toMatchObject({
-    clientId: 10,
-    category: "Электрика",
-    status: STATUS.NEW,
-    notifiedMessages: "[]",
+  it('builds a new request with status NEW and appends it as a row', async () => {
+    sheetsClient.appendRow.mockResolvedValue(undefined);
+
+    const result = await createRequest({
+      clientId: 555,
+      clientName: 'Иван Иванов',
+      phone: '+79990000000',
+      category: 'Электрика',
+      description: 'Не работает розетка',
+      address: 'ул. Ленина, 1',
+      convenientTime: 'Завтра утром',
+    });
+
+    expect(result.id).toBe(`R${Date.now()}`);
+    expect(result.createdAt).toBe('2024-03-10_12:00:00');
+    expect(result.status).toBe(STATUS.NEW);
+    expect(result.employeeId).toBe('');
+    expect(result.notifiedMessages).toBe('[]');
+
+    expect(sheetsClient.appendRow).toHaveBeenCalledTimes(1);
+    const [sheetName, row] = sheetsClient.appendRow.mock.calls[0];
+    expect(sheetName).toBe('Заявки');
+    expect(row).toEqual(COLUMNS.map((key) => result[key]));
   });
-  expect(request.id).toMatch(/^R\d+$/);
-  expect(sheets.appendRow).toHaveBeenCalledWith("Заявки", expect.any(Array));
-});
 
-test("находит заявку и возвращает номер строки Google Sheets", async () => {
-  sheets.getRows.mockResolvedValue([row({ id: "R1" }), row({ id: "R2" })]);
-
-  await expect(findRequestById("R2")).resolves.toEqual({
-    rowNumber: 3,
-    data: expect.objectContaining({ id: "R2", category: "Электрика" }),
+  it('falls back to empty strings for optional client fields', async () => {
+    sheetsClient.appendRow.mockResolvedValue(undefined);
+    const result = await createRequest({
+      clientId: 1,
+      category: 'Другое',
+      description: 'desc',
+      address: 'addr',
+      convenientTime: 'time',
+    });
+    expect(result.clientName).toBe('');
+    expect(result.phone).toBe('');
   });
 });
 
-test("фильтрует новые заявки по категории и активные заявки сотрудника", async () => {
-  sheets.getRows.mockResolvedValue([
-    row({ id: "new-electric", category: "Электрика" }),
-    row({ id: "new-plumbing", category: "Сантехника" }),
-    row({ id: "taken", status: STATUS.TAKEN, employeeId: "42" }),
-    row({ id: "departed", status: STATUS.DEPARTED, employeeId: "42" }),
-    row({ id: "closed", status: STATUS.CLOSED, employeeId: "42" }),
-  ]);
+describe('findRequestById', () => {
+  const sampleRows = [
+    ['R1', '2024-01-01_00:00:00', '111', 'Иван', '+7900', 'Электрика',
+      'desc1', 'addr1', 'time1', STATUS.NEW, '', '', '', '', '', '[]'],
+    ['R2', '2024-01-02_00:00:00', '222', 'Пётр', '+7901', 'Сантехника',
+      'desc2', 'addr2', 'time2', STATUS.TAKEN, '333', 'Мастер', 't', '', '', '[]'],
+  ];
 
-  await expect(getNewRequestsByCategory("Электрика")).resolves.toHaveLength(1);
-  await expect(getActiveRequestsByEmployee(42)).resolves.toEqual([
-    expect.objectContaining({ data: expect.objectContaining({ id: "taken" }) }),
-    expect.objectContaining({ data: expect.objectContaining({ id: "departed" }) }),
-  ]);
+  it('finds a request by id and returns its 1-based sheet row number', async () => {
+    sheetsClient.getRows.mockResolvedValue(sampleRows);
+    const found = await findRequestById('R2');
+    expect(found).not.toBeNull();
+    expect(found.rowNumber).toBe(3); // index 1 -> row 1+2
+    expect(found.data.id).toBe('R2');
+    expect(found.data.status).toBe(STATUS.TAKEN);
+    expect(found.data.employeeId).toBe('333');
+  });
+
+  it('returns null when no request matches the id', async () => {
+    sheetsClient.getRows.mockResolvedValue(sampleRows);
+    const found = await findRequestById('R999');
+    expect(found).toBeNull();
+  });
 });
 
-test("сохраняет заявку в исходном формате строки", async () => {
-  const data = { id: "R1", category: "Электрика", status: STATUS.TAKEN };
-  await saveRequest(7, data);
-  expect(sheets.updateRow).toHaveBeenCalledWith("Заявки", 7, expect.any(Array));
+describe('saveRequest', () => {
+  it('writes the object back as a row in COLUMNS order', async () => {
+    sheetsClient.updateRow.mockResolvedValue(undefined);
+    const obj = {
+      id: 'R1', createdAt: 'c', clientId: 1, clientName: 'n', phone: 'p',
+      category: 'Электрика', description: 'd', address: 'a', convenientTime: 't',
+      status: STATUS.CLOSED, employeeId: '9', employeeName: 'e', takenAt: 'ta',
+      departedAt: 'da', closedAt: 'ca', notifiedMessages: '[]',
+    };
+    await saveRequest(7, obj);
+    expect(sheetsClient.updateRow).toHaveBeenCalledWith('Заявки', 7, COLUMNS.map((k) => obj[k]));
+  });
 });

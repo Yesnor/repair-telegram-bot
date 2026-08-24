@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { google } = require('googleapis');
+const { createSheetsAuth } = require('../src/googleAuth');
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
@@ -15,12 +16,11 @@ const SHEETS = {
 };
 
 async function main() {
-  const auth = new google.auth.JWT(
-    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    null,
-    (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    ['https://www.googleapis.com/auth/spreadsheets']
-  );
+  if (!SPREADSHEET_ID) {
+    throw new Error('Set SPREADSHEET_ID in .env before running init-sheets.');
+  }
+
+  const auth = createSheetsAuth();
   await auth.authorize();
   const sheets = google.sheets({ version: 'v4', auth });
 

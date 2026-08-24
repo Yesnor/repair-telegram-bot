@@ -30,6 +30,8 @@ localDev.js           — локальный запуск через long pollin
 3. Создайте сервисный аккаунт (Service Account), скачайте JSON-ключ.
 4. Из JSON возьмите `client_email` → это `GOOGLE_SERVICE_ACCOUNT_EMAIL`,
    и `private_key` → это `GOOGLE_PRIVATE_KEY`.
+   Если удобнее хранить ключ в отдельном файле, можно вместо этого указать
+   `GOOGLE_APPLICATION_CREDENTIALS` на путь к JSON-файлу сервисного аккаунта.
 
 ### 1.3. Google-таблица
 

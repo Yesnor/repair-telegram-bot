@@ -8,6 +8,24 @@ jest.mock("googleapis", () => ({
 const { google } = require("googleapis");
 const { colLetter, getRows, appendRow, updateRow } = require("../src/sheetsClient");
 
+const originalEnv = {
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
+  GOOGLE_APPLICATION_CREDENTIALS: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+};
+
+beforeEach(() => {
+  process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = "service-account@example.com";
+  process.env.GOOGLE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----";
+  delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+});
+
+afterAll(() => {
+  process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = originalEnv.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  process.env.GOOGLE_PRIVATE_KEY = originalEnv.GOOGLE_PRIVATE_KEY;
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = originalEnv.GOOGLE_APPLICATION_CREDENTIALS;
+});
+
 test.each([[1, "A"], [26, "Z"], [27, "AA"], [52, "AZ"], [53, "BA"]])(
   "преобразует номер столбца %i в %s",
   (number, expected) => expect(colLetter(number)).toBe(expected),

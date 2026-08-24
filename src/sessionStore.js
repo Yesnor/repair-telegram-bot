@@ -4,6 +4,7 @@
 // Колонки листа: ChatKey | StateJSON | UpdatedAt
 
 const { getRows, appendRow, updateRow } = require('./sheetsClient');
+const { formatTimestamp } = require('./dateUtils');
 
 const SHEET = 'Sessions';
 
@@ -29,7 +30,7 @@ const sessionStore = {
   },
 
   async set(key, value) {
-    const row = [key, JSON.stringify(value), new Date().toISOString()];
+    const row = [key, JSON.stringify(value), formatTimestamp()];
     const found = await findRow(key);
     if (found) {
       await updateRow(SHEET, found.rowNumber, row);
@@ -41,7 +42,7 @@ const sessionStore = {
   async delete(key) {
     const found = await findRow(key);
     if (found) {
-      await updateRow(SHEET, found.rowNumber, [key, '', new Date().toISOString()]);
+      await updateRow(SHEET, found.rowNumber, [key, '', formatTimestamp()]);
     }
   },
 };

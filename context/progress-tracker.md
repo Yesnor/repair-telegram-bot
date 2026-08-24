@@ -35,6 +35,8 @@ change.
 
 ## Session Notes
 
+- `scripts/initSheets.js` and `src/sheetsClient.js` now share one Sheets auth path that supports both inline keys and `GOOGLE_APPLICATION_CREDENTIALS`.
+
 - Category buttons are now rendered one per row so full labels remain readable; added a focused Jest test for the keyboard layout.
 
 - Изменения в `README.md` и `src/bot.js` существовали до этой задачи и не изменялись.
