@@ -45,10 +45,7 @@ const requestWizard = new Scenes.WizardScene(
 
   // Шаг 1: выбор категории
   async (ctx) => {
-    await ctx.reply(
-      "Выберите категорию услуги:",
-      categoryKeyboard(),
-    );
+    await ctx.reply("Выберите категорию услуги:", categoryKeyboard());
     return ctx.wizard.next();
   },
 
@@ -67,21 +64,32 @@ const requestWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Шаг 3: описание -> просим адрес
+  // Шаг 3: описание -> просим город
   async (ctx) => {
     if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, опишите проблему текстом.");
+      await ctx.reply("Пожалуйста, опишите проблему.");
       return;
     }
     ctx.wizard.state.data.description = ctx.message.text;
+    await ctx.reply("Укажите свой город");
+    return ctx.wizard.next();
+  },
+
+  // Шаг 4: город -> просим адрес
+  async (ctx) => {
+    if (!ctx.message?.text) {
+      await ctx.reply("Пожалуйста, укажите свой город.");
+      return;
+    }
+    ctx.wizard.state.data.city = ctx.message.text;
     await ctx.reply("Укажите адрес, куда нужно приехать мастеру:");
     return ctx.wizard.next();
   },
 
-  // Шаг 4: адрес -> просим удобное время
+  // Шаг 5: адрес -> просим удобное время
   async (ctx) => {
     if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, укажите адрес текстом.");
+      await ctx.reply("Пожалуйста, укажите адрес.");
       return;
     }
     ctx.wizard.state.data.address = ctx.message.text;
@@ -89,10 +97,10 @@ const requestWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Шаг 5: время -> просим телефон
+  // Шаг 6: время -> просим телефон
   async (ctx) => {
     if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, укажите удобное время текстом.");
+      await ctx.reply("Пожалуйста, укажите удобное время.");
       return;
     }
     ctx.wizard.state.data.convenientTime = ctx.message.text;
@@ -105,7 +113,7 @@ const requestWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Шаг 6: телефон -> сохраняем заявку и уведомляем сотрудников
+  // Шаг 7: телефон -> сохраняем заявку и уведомляем сотрудников
   async (ctx) => {
     const phone = ctx.message?.contact?.phone_number || ctx.message?.text;
     if (!phone) {
@@ -126,7 +134,7 @@ const requestWizard = new Scenes.WizardScene(
       phone,
       category: data.category,
       description: data.description,
-      address: data.address,
+      address: `${data.city}, ${data.address}`,
       convenientTime: data.convenientTime,
     });
 

@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Wire the shared date-formatting helper into every Google Sheets timestamp write.
+- Add a city prompt before address entry and save city as part of the request address.
 
 ## Completed
 
@@ -17,10 +17,12 @@ Update this file after every meaningful implementation change.
 - Wired `formatTimestamp()` into request creation, request status transitions, and session `UpdatedAt` writes.
 - Added focused tests covering the timestamp formatter usage.
 - Fixed the stale `../trash/requests` import in `tests/requests.test.js`.
+- Added a client dialog step that asks for the city before the address and saves requests with `city, address`.
+- Added a focused bot flow test for the new city/address behavior.
 
 ## In Progress
 
-- Test suite passes: 6 suites, 22 tests.
+- Test suite passes: 6 suites, 23 tests.
 
 ## Next Up
 
@@ -39,3 +41,4 @@ Update this file after every meaningful implementation change.
 - `scripts/initSheets.js` and `src/sheetsClient.js` now share one Sheets auth path that supports both inline keys and `GOOGLE_APPLICATION_CREDENTIALS`.
 - Category buttons are now rendered one per row so full labels remain readable; added a focused Jest test for the keyboard layout.
 - Shared Google Sheets timestamp writes now use `src/dateUtils.js` across request creation, status transitions, and session persistence.
+- Client request creation now asks for city before street address; saved request addresses include both values.

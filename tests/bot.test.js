@@ -24,13 +24,19 @@ jest.mock("../src/requests", () => {
 });
 
 const mockGetEmployeeByTelegramId = jest.fn();
+const mockGetActiveEmployeesByCategory = jest.fn();
 jest.mock("../src/employees", () => ({
   getEmployeeByTelegramId: mockGetEmployeeByTelegramId,
-  getActiveEmployeesByCategory: jest.fn(),
+  getActiveEmployeesByCategory: mockGetActiveEmployeesByCategory,
 }));
 
 const { bot, categoryKeyboard } = require("../src/bot");
-const { STATUS } = require("../src/requests");
+const { COLUMNS, STATUS } = require("../src/requests");
+const { sessionStore } = require("../src/sessionStore");
+const sheetsClient = require("../src/sheetsClient");
+const Telegram = require("../node_modules/telegraf/lib/telegram").default;
+
+const telegramCallApiSpy = jest.spyOn(Telegram.prototype, "callApi");
 
 test("показывает каждую категорию отдельной строкой без обрезания текста", () => {
   const rows = categoryKeyboard().reply_markup.inline_keyboard;
@@ -66,12 +72,55 @@ function callback(data, fromId = 42) {
   };
 }
 
+function message(text, fromId = 100) {
+  return {
+    update_id: Date.now(),
+    message: {
+      message_id: Date.now(),
+      from: { id: fromId, first_name: "Иван" },
+      chat: { id: fromId, type: "private" },
+      date: 1710000000,
+      text,
+    },
+  };
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
-  bot.telegram.callApi = jest.fn(async (method) =>
+  const sessions = new Map();
+  sessionStore.get.mockImplementation(async (key) => sessions.get(key));
+  sessionStore.set.mockImplementation(async (key, value) => {
+    sessions.set(key, value);
+  });
+  sessionStore.delete.mockImplementation(async (key) => {
+    sessions.delete(key);
+  });
+  telegramCallApiSpy.mockImplementation(async (method) =>
     method === "sendMessage" ? { message_id: 99 } : {},
   );
   mockGetEmployeeByTelegramId.mockResolvedValue(employee);
+  mockGetActiveEmployeesByCategory.mockResolvedValue([]);
+});
+
+test("клиент указывает город перед адресом, и город добавляется к адресу заявки", async () => {
+  const category = categoryKeyboard().reply_markup.inline_keyboard[0][0].text;
+
+  await bot.handleUpdate(callback("new_request", 100));
+  await bot.handleUpdate(callback(`cat:${category}`, 100));
+  await bot.handleUpdate(message("Не работает розетка", 100));
+  await bot.handleUpdate(message("Киев", 100));
+  await bot.handleUpdate(message("ул. Ленина, 1", 100));
+  await bot.handleUpdate(message("Завтра после 12:00", 100));
+  await bot.handleUpdate(message("+380000000000", 100));
+
+  const savedRow = sheetsClient.appendRow.mock.calls[0][1];
+  expect(savedRow[COLUMNS.indexOf("address")]).toBe("Киев, ул. Ленина, 1");
+  expect(
+    telegramCallApiSpy.mock.calls.some(
+      ([method, payload]) =>
+        method === "sendMessage" && payload.text === "Укажите свой город",
+    ),
+  ).toBe(true);
 });
 
 test("первый сотрудник берёт новую заявку, а повторное взятие отклоняется", async () => {
