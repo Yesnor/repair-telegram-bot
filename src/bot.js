@@ -558,6 +558,11 @@ bot.on(["photo", "document"], async (ctx) => {
   const mimeType = document?.mime_type || "image/jpeg";
 
   try {
+    const fileLink = await ctx.telegram.getFileLink(fileId);
+    const response = await fetch(String(fileLink));
+    if (!response.ok) throw new Error(`Telegram file download failed: ${response.status}`);
+    const buffer = Buffer.from(await response.arrayBuffer());
+
     if (!ctx.session.uploadFolderId) {
       const folderName = `${new Date().toISOString().slice(0, 10)}_${requestId}`;
       const folder = await createRequestFolder(folderName);
@@ -567,10 +572,6 @@ bot.on(["photo", "document"], async (ctx) => {
       await saveRequest(found.rowNumber, found.data);
     }
 
-    const fileLink = await ctx.telegram.getFileLink(fileId);
-    const response = await fetch(String(fileLink));
-    if (!response.ok) throw new Error(`Telegram file download failed: ${response.status}`);
-    const buffer = Buffer.from(await response.arrayBuffer());
     await uploadFileToDrive(buffer, filename, mimeType, ctx.session.uploadFolderId);
 
     await ctx.reply(
@@ -578,7 +579,12 @@ bot.on(["photo", "document"], async (ctx) => {
       requestCompletionKeyboard(requestId),
     );
   } catch (err) {
-    console.error("Не удалось загрузить файл в Google Drive:", err.message);
+    console.error("Не удалось загрузить файл в Google Drive:", {
+      message: err.message,
+      code: err.code,
+      response: err.response?.data,
+      stack: err.stack,
+    });
     await ctx.reply("Не удалось загрузить файл. Попробуйте ещё раз.");
   }
 });

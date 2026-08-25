@@ -42,6 +42,7 @@ Update this file after every meaningful implementation change.
 
 - Added the `photosLink` request column and the `Ссылки на фото документов` sheet header.
 - Added Google Drive request folders named `yyyy-mm-dd_<request-id>` and employee upload flow before closing.
+- Improved Drive upload diagnostics and added Shared Drive request support.
 
 - `scripts/initSheets.js` and `src/sheetsClient.js` now share one Sheets auth path that supports both inline keys and `GOOGLE_APPLICATION_CREDENTIALS`.
 - Category buttons are now rendered one per row so full labels remain readable; added a focused Jest test for the keyboard layout.

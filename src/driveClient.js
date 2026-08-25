@@ -29,6 +29,7 @@ async function createRequestFolder(folderName) {
       mimeType: "application/vnd.google-apps.folder",
       parents: DRIVE_FOLDER_ID ? [DRIVE_FOLDER_ID] : undefined,
     },
+    supportsAllDrives: true,
     fields: "id, webViewLink",
   });
   return res.data;
@@ -42,6 +43,7 @@ async function uploadFileToDrive(buffer, filename, mimeType, parentFolderId) {
       parents: parentFolderId ? [parentFolderId] : undefined,
     },
     media: { mimeType, body: Readable.from(buffer) },
+    supportsAllDrives: true,
     fields: "id, webViewLink",
   });
   return res.data.webViewLink;
