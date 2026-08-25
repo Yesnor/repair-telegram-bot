@@ -30,7 +30,7 @@ jest.mock("../src/employees", () => ({
   getActiveEmployeesByCategory: mockGetActiveEmployeesByCategory,
 }));
 
-const { bot, categoryKeyboard } = require("../src/bot");
+const { bot, categoryKeyboard, configureBotMenu, BOT_COMMANDS } = require("../src/bot");
 const { COLUMNS, STATUS } = require("../src/requests");
 const { sessionStore } = require("../src/sessionStore");
 const sheetsClient = require("../src/sheetsClient");
@@ -44,6 +44,15 @@ test("показывает каждую категорию отдельной с
   expect(rows).toHaveLength(11);
   expect(rows.every((row) => row.length === 1)).toBe(true);
   expect(rows.map(([button]) => button.text)).toContain("Холодильное оборудование");
+});
+
+test("registers start command in the bot menu", async () => {
+  await configureBotMenu();
+
+  expect(BOT_COMMANDS).toEqual([{ command: "start", description: "Старт" }]);
+  expect(telegramCallApiSpy).toHaveBeenCalledWith("setMyCommands", {
+    commands: BOT_COMMANDS,
+  });
 });
 
 const employee = { telegramId: "42", name: "Анна", category: "Электрика" };

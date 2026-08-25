@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { configureBotMenu } = require('../src/bot');
 
 async function main() {
   const { BOT_TOKEN, PUBLIC_URL, WEBHOOK_SECRET } = process.env;
@@ -15,6 +16,8 @@ async function main() {
   });
   const data = await res.json();
   console.log(data);
+  await configureBotMenu();
+  console.log({ ok: true, description: 'Bot menu commands updated' });
 }
 
 main();

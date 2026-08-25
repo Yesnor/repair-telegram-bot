@@ -28,6 +28,8 @@ const CATEGORIES = [
   "Другое",
 ];
 
+const BOT_COMMANDS = [{ command: "start", description: "Старт" }];
+
 function categoryKeyboard() {
   return Markup.inlineKeyboard(
     CATEGORIES.map((category) => [
@@ -321,6 +323,10 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.use(session({ store: sessionStore }));
 bot.use(stage.middleware());
 
+async function configureBotMenu() {
+  await bot.telegram.setMyCommands(BOT_COMMANDS);
+}
+
 bot.start(async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (employee) {
@@ -552,4 +558,4 @@ bot.catch((err, ctx) => {
   console.error(`Ошибка при обработке update ${ctx.updateType}:`, err);
 });
 
-module.exports = { bot, categoryKeyboard };
+module.exports = { bot, categoryKeyboard, configureBotMenu, BOT_COMMANDS };

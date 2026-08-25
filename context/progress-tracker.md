@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Copy each new request ID to the `Оплата та розрахунки` sheet column A.
+- Add a Telegram bot menu button for `/start` with the visible label `Старт`.
 
 ## Completed
 
@@ -20,10 +20,11 @@ Update this file after every meaningful implementation change.
 - Added a client dialog step that asks for the city before the address and saves requests with `city, address`.
 - Added a focused bot flow test for the new city/address behavior.
 - Added payment-sheet ID mirroring when creating a request.
+- Added bot menu command registration so users can press `Старт` instead of typing `/start`.
 
 ## In Progress
 
-- Test suite passes: 6 suites, 23 tests.
+- Test suite passes: 6 suites, 24 tests.
 
 ## Next Up
 
@@ -44,3 +45,4 @@ Update this file after every meaningful implementation change.
 - Shared Google Sheets timestamp writes now use `src/dateUtils.js` across request creation, status transitions, and session persistence.
 - Client request creation now asks for city before street address; saved request addresses include both values.
 - New request creation appends the generated request ID to `Оплата та розрахунки` column A.
+- Bot startup/setup now registers `/start` in the Telegram menu with the description `Старт`.
