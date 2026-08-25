@@ -1,6 +1,7 @@
 const { Telegraf, Scenes, session, Markup } = require("telegraf");
 const { sessionStore } = require("./sessionStore");
 const { formatTimestamp } = require("./dateUtils");
+const { createRequestFolder, uploadFileToDrive } = require("./driveClient");
 const {
   createRequest,
   findRequestById,
@@ -198,6 +199,13 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
   }
 }
 
+function requestCompletionKeyboard(requestId) {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback("\u{1F4CE} Отправить файлы", `upload:${requestId}`)],
+    [Markup.button.callback("\u2611\uFE0F Закрыть заявку", `close:${requestId}`)],
+  ]);
+}
+
 function employeeMenuKeyboard() {
   return Markup.inlineKeyboard([
     [Markup.button.callback("🆕 Заявки моей категории", "menu:new")],
@@ -270,6 +278,12 @@ async function showMyAcceptedRequests(ctx, employee) {
             ],
           ]
         : [[Markup.button.callback("☑️ Закрыть заявку", `close:${data.id}`)]];
+
+    if (data.status === STATUS.DEPARTED) {
+      buttons.unshift([
+        Markup.button.callback("\u{1F4CE} Отправить файлы", `upload:${data.id}`),
+      ]);
+    }
 
     await ctx.telegram.sendMessage(
       ctx.chat.id,
@@ -487,12 +501,86 @@ bot.action(/^depart:(.+)$/, async (ctx) => {
       [Markup.button.callback("☑️ Закрыть заявку", `close:${requestId}`)],
     ]),
   );
+  await ctx.reply("Можно добавить документы к заявке:", requestCompletionKeyboard(requestId));
 
   await notifyClient(
     ctx,
     found.data,
     `Мастер выехал на адрес по заявке №${requestId}.`,
   );
+});
+
+bot.action(/^upload:(.+)$/, async (ctx) => {
+  const requestId = ctx.match[1];
+  const employee = await getEmployeeByTelegramId(ctx.from.id);
+  const found = await findRequestById(requestId);
+
+  if (
+    !found ||
+    !employee ||
+    String(found.data.employeeId) !== String(employee.telegramId) ||
+    found.data.status !== STATUS.DEPARTED
+  ) {
+    await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    return;
+  }
+
+  ctx.session.uploadRequestId = requestId;
+  ctx.session.uploadFolderId = "";
+  await ctx.answerCbQuery();
+  await ctx.reply(
+    `Отправьте фотографии или документы по заявке №${requestId}. Можно отправить несколько файлов подряд.`,
+  );
+});
+
+bot.on(["photo", "document"], async (ctx) => {
+  const requestId = ctx.session?.uploadRequestId;
+  if (!requestId) return;
+
+  const employee = await getEmployeeByTelegramId(ctx.from.id);
+  const found = await findRequestById(requestId);
+  if (
+    !found ||
+    !employee ||
+    String(found.data.employeeId) !== String(employee.telegramId) ||
+    found.data.status !== STATUS.DEPARTED
+  ) {
+    delete ctx.session.uploadRequestId;
+    delete ctx.session.uploadFolderId;
+    await ctx.reply("Загрузка файлов недоступна для этой заявки.");
+    return;
+  }
+
+  const document = ctx.message.document;
+  const photo = ctx.message.photo?.at(-1);
+  const fileId = document?.file_id || photo?.file_id;
+  const filename = document?.file_name || `${requestId}_${fileId}.jpg`;
+  const mimeType = document?.mime_type || "image/jpeg";
+
+  try {
+    if (!ctx.session.uploadFolderId) {
+      const folderName = `${new Date().toISOString().slice(0, 10)}_${requestId}`;
+      const folder = await createRequestFolder(folderName);
+      ctx.session.uploadFolderId = folder.id;
+      found.data.photosLink =
+        folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}`;
+      await saveRequest(found.rowNumber, found.data);
+    }
+
+    const fileLink = await ctx.telegram.getFileLink(fileId);
+    const response = await fetch(String(fileLink));
+    if (!response.ok) throw new Error(`Telegram file download failed: ${response.status}`);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    await uploadFileToDrive(buffer, filename, mimeType, ctx.session.uploadFolderId);
+
+    await ctx.reply(
+      "Файл загружен. Отправьте следующий файл или нажмите «Закрыть заявку».",
+      requestCompletionKeyboard(requestId),
+    );
+  } catch (err) {
+    console.error("Не удалось загрузить файл в Google Drive:", err.message);
+    await ctx.reply("Не удалось загрузить файл. Попробуйте ещё раз.");
+  }
 });
 
 bot.action(/^close:(.+)$/, async (ctx) => {
@@ -514,6 +602,8 @@ bot.action(/^close:(.+)$/, async (ctx) => {
   await saveRequest(found.rowNumber, found.data);
 
   await ctx.answerCbQuery("Заявка закрыта.");
+  delete ctx.session.uploadRequestId;
+  delete ctx.session.uploadFolderId;
   await ctx.editMessageText(
     `${ctx.callbackQuery.message.text}\n\n☑️ Заявка закрыта.`,
   );

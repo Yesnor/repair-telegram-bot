@@ -29,6 +29,7 @@ const COLUMNS = [
   "departedAt",
   "closedAt",
   "notifiedMessages",
+  "photosLink",
 ];
 
 function rowToObject(row) {
@@ -40,7 +41,7 @@ function rowToObject(row) {
 }
 
 function objectToRow(obj) {
-  return COLUMNS.map((key) => (obj[key] !== undefined ? obj[key] : ""));
+  return COLUMNS.map((key) => obj[key]);
 }
 
 function generateId() {
@@ -65,6 +66,7 @@ async function createRequest(data) {
     departedAt: "",
     closedAt: "",
     notifiedMessages: "[]",
+    photosLink: "",
   };
   await appendRow(SHEET, objectToRow(obj));
   await appendRow(PAYMENTS_SHEET, [obj.id]);
