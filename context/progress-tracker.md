@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Add a city prompt before address entry and save city as part of the request address.
+- Copy each new request ID to the `Оплата та розрахунки` sheet column A.
 
 ## Completed
 
@@ -19,6 +19,7 @@ Update this file after every meaningful implementation change.
 - Fixed the stale `../trash/requests` import in `tests/requests.test.js`.
 - Added a client dialog step that asks for the city before the address and saves requests with `city, address`.
 - Added a focused bot flow test for the new city/address behavior.
+- Added payment-sheet ID mirroring when creating a request.
 
 ## In Progress
 
@@ -42,3 +43,4 @@ Update this file after every meaningful implementation change.
 - Category buttons are now rendered one per row so full labels remain readable; added a focused Jest test for the keyboard layout.
 - Shared Google Sheets timestamp writes now use `src/dateUtils.js` across request creation, status transitions, and session persistence.
 - Client request creation now asks for city before street address; saved request addresses include both values.
+- New request creation appends the generated request ID to `Оплата та розрахунки` column A.

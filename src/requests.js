@@ -2,6 +2,7 @@ const { formatTimestamp } = require("./dateUtils");
 const { getRows, appendRow, updateRow } = require("./sheetsClient");
 
 const SHEET = "Заявки";
+const PAYMENTS_SHEET = "Оплата та розрахунки";
 
 const STATUS = {
   NEW: "Получена от клиента",
@@ -66,6 +67,7 @@ async function createRequest(data) {
     notifiedMessages: "[]",
   };
   await appendRow(SHEET, objectToRow(obj));
+  await appendRow(PAYMENTS_SHEET, [obj.id]);
   return obj;
 }
 

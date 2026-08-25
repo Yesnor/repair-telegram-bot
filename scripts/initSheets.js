@@ -24,6 +24,7 @@ const SHEETS = {
     "NotifiedMessages (служебное)",
   ],
   Сотрудники: ["Telegram ID", "Имя", "Категория", "Активен (да/нет)"],
+  "Оплата та розрахунки": ["ID"],
   Sessions: [
     "ChatKey (служебное)",
     "StateJSON (служебное)",

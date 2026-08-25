@@ -35,10 +35,17 @@ describe("createRequest", () => {
     expect(result.employeeId).toBe("");
     expect(result.notifiedMessages).toBe("[]");
 
-    expect(sheetsClient.appendRow).toHaveBeenCalledTimes(1);
-    const [sheetName, row] = sheetsClient.appendRow.mock.calls[0];
-    expect(sheetName).toBe("Заявки");
-    expect(row).toEqual(COLUMNS.map((key) => result[key]));
+    expect(sheetsClient.appendRow).toHaveBeenCalledTimes(2);
+    expect(sheetsClient.appendRow).toHaveBeenNthCalledWith(
+      1,
+      "Заявки",
+      COLUMNS.map((key) => result[key]),
+    );
+    expect(sheetsClient.appendRow).toHaveBeenNthCalledWith(
+      2,
+      "Оплата та розрахунки",
+      [result.id],
+    );
   });
 
   it("falls back to empty strings for optional client fields", async () => {
