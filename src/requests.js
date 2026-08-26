@@ -28,8 +28,8 @@ const COLUMNS = [
   "takenAt",
   "departedAt",
   "closedAt",
-  "notifiedMessages",
   "photosLink",
+  "notifiedMessages",
 ];
 
 function rowToObject(row) {
