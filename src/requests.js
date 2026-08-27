@@ -31,6 +31,7 @@ const COLUMNS = [
   "closedAt",
   "photosLink",
   "notifiedMessages",
+  "workDescriptionEntered",
 ];
 
 function rowToObject(row) {
@@ -69,6 +70,7 @@ async function createRequest(data) {
     closedAt: "",
     notifiedMessages: "[]",
     photosLink: "",
+    workDescriptionEntered: "",
   };
   await appendRow(SHEET, objectToRow(obj));
   await appendRow(PAYMENTS_SHEET, [obj.id]);

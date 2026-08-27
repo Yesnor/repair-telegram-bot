@@ -218,8 +218,9 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
 }
 
 function requestCompletionKeyboard(requestId, data = {}) {
-  const hasDescription = Boolean(String(data.description || "").trim());
+  const hasDescription = Boolean(data.workDescriptionEntered);
   const hasMaterialCost = Boolean(String(data.materialCost || "").trim());
+  const hasFiles = Boolean(String(data.photosLink || "").trim());
   return Markup.inlineKeyboard([
     [
       Markup.button.callback(
@@ -235,7 +236,7 @@ function requestCompletionKeyboard(requestId, data = {}) {
     ],
     [
       Markup.button.callback(
-        "\u{1F4CE} Отправить файлы",
+        `${hasFiles ? "✅" : "\u{1F4CE}"} Отправить файлы`,
         `upload:${requestId}`,
       ),
     ],
@@ -583,6 +584,7 @@ bot.action(/^upload:(.+)$/, async (ctx) => {
 
   ctx.session.uploadRequestId = requestId;
   ctx.session.uploadFolderId = "";
+  ctx.session.uploadFolderLink = "";
   found.data.materialCost = await getMaterialCost(requestId);
   await ctx.answerCbQuery();
   await ctx.reply(
@@ -651,6 +653,7 @@ bot.on("text", async (ctx, next) => {
 
   if (input.field === "description") {
     found.data.description = value;
+    found.data.workDescriptionEntered = "true";
     await saveRequest(found.rowNumber, found.data);
   } else {
     await saveMaterialCost(input.requestId, value);
@@ -659,7 +662,9 @@ bot.on("text", async (ctx, next) => {
   found.data.materialCost = await getMaterialCost(input.requestId);
   delete ctx.session.completionInput;
   await ctx.reply(
-    "Сохранено.",
+    input.field === "description"
+      ? "Описание работ сохранено"
+      : "Сумма затрат сохранена",
     requestCompletionKeyboard(input.requestId, found.data),
   );
 });
@@ -678,6 +683,7 @@ bot.on(["photo", "document"], async (ctx) => {
   ) {
     delete ctx.session.uploadRequestId;
     delete ctx.session.uploadFolderId;
+    delete ctx.session.uploadFolderLink;
     await ctx.reply("Загрузка файлов недоступна для этой заявки.");
     return;
   }
@@ -699,10 +705,9 @@ bot.on(["photo", "document"], async (ctx) => {
       const folderName = `${new Date().toISOString().slice(0, 10)}_${requestId}`;
       const folder = await createRequestFolder(folderName);
       ctx.session.uploadFolderId = folder.id;
-      found.data.photosLink =
+      ctx.session.uploadFolderLink =
         folder.webViewLink ||
         `https://drive.google.com/drive/folders/${folder.id}`;
-      await saveRequest(found.rowNumber, found.data);
     }
 
     await uploadFileToDrive(
@@ -711,6 +716,13 @@ bot.on(["photo", "document"], async (ctx) => {
       mimeType,
       ctx.session.uploadFolderId,
     );
+
+    if (!found.data.photosLink) {
+      found.data.photosLink =
+        ctx.session.uploadFolderLink ||
+        `https://drive.google.com/drive/folders/${ctx.session.uploadFolderId}`;
+      await saveRequest(found.rowNumber, found.data);
+    }
 
     await ctx.reply(
       "Файл загружен. Отправьте следующий файл или нажмите «Закрыть заявку».",
@@ -743,7 +755,7 @@ bot.action(/^close:(.+)$/, async (ctx) => {
 
   const materialCost = await getMaterialCost(requestId);
   if (
-    !String(found.data.description || "").trim() ||
+    !found.data.workDescriptionEntered ||
     !String(materialCost || "").trim()
   ) {
     await ctx.answerCbQuery();
@@ -758,8 +770,9 @@ bot.action(/^close:(.+)$/, async (ctx) => {
   await ctx.answerCbQuery("Заявка закрыта.");
   delete ctx.session.uploadRequestId;
   delete ctx.session.uploadFolderId;
+  delete ctx.session.uploadFolderLink;
   await ctx.editMessageText(
-    `${ctx.callbackQuery.message.text}\n\n☑️ Заявка закрыта.`,
+    `${ctx.callbackQuery.message.text}\n\n✅ Заявка закрыта.`,
   );
 
   await notifyClient(

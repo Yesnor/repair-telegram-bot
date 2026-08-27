@@ -48,6 +48,10 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
+- The final closed-request status now displays the green check mark.
+- Completion input now uses separate success messages for work descriptions and material costs.
+- The file-upload button now changes to ✅ after a successful upload.
+
 - Completion now requires a work description and material cost; the description is saved to the requests sheet, and the cost to column J of the payment sheet.
 
 - Employee request cards now show `Клиент` between `Срок исполнения` and `Телефон клиента`.

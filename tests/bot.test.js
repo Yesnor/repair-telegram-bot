@@ -195,6 +195,7 @@ test("сотрудник проходит статусы выезда и зак�
     }),
   );
   sheetsClient.getRows.mockResolvedValue([["R1", "", "", "", "", "", "", "", "", "100"]]);
+  found.data.workDescriptionEntered = "true";
   await bot.handleUpdate(callback("close:R1"));
   expect(found.data.status).toBe(STATUS.CLOSED);
   expect(found.data.closedAt).toBe("2024-03-10_12:00:00");
