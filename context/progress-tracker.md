@@ -48,6 +48,7 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
+- The completion keyboard now reloads the saved material cost after file upload, preserving its ✅ marker.
 - Request closing now also requires successfully attached files.
 - Closed requests now display only the final status with the request number.
 - Non-numeric material-cost input now prompts the employee to enter the amount using digits.

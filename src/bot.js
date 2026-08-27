@@ -725,6 +725,7 @@ bot.on(["photo", "document"], async (ctx) => {
       ctx.session.uploadFolderId,
     );
 
+    found.data.materialCost = await getMaterialCost(requestId);
     if (!found.data.photosLink) {
       found.data.photosLink =
         ctx.session.uploadFolderLink ||
