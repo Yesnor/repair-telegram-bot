@@ -192,7 +192,8 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
           `Категория: ${requestData.category}\n` +
           `Адрес: ${requestData.address}\n` +
           `Описание: ${requestData.description}\n` +
-          `Удобное время: ${requestData.convenientTime}\n` +
+          `Срок исполнения: ${requestData.convenientTime}\n` +
+          `Клиент: ${requestData.client}\n` +
           `Телефон клиента: ${requestData.phone}`,
         Markup.inlineKeyboard([
           Markup.button.callback("Взять в работу", `take:${requestData.id}`),
@@ -253,7 +254,8 @@ async function showNewCategoryRequests(ctx, employee) {
         `Категория: ${data.category}\n` +
         `Адрес: ${data.address}\n` +
         `Описание: ${data.description}\n` +
-        `Удобное время: ${data.convenientTime}\n` +
+        `Срок исполнения: ${data.convenientTime}\n` +
+        `Клиент: ${data.client}\n` +
         `Телефон клиента: ${data.phone}`,
       Markup.inlineKeyboard([
         Markup.button.callback("Взять в работу", `take:${data.id}`),

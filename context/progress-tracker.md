@@ -27,6 +27,8 @@ Update this file after every meaningful implementation change.
 - Added a client-name step after category selection and save its value to the `Клиент` request column.
 
 - Added a photo-confirmation reminder to the employee notification after taking a request; it remains visible after marking departure.
+- Added the contractual client name to employee request cards between deadline and client phone.
+- Renamed the employee request card deadline label from `Крайний срок` to `Срок исполнения`.
 
 ## In Progress
 
@@ -45,6 +47,8 @@ Update this file after every meaningful implementation change.
 - [Decisions made that affect the system design or data model - include why the decision was made]
 
 ## Session Notes
+
+- Employee request cards now show `Клиент` between `Срок исполнения` and `Телефон клиента`.
 
 - Employee request status messages now keep a photo-confirmation reminder between the taken and departed status lines.
 

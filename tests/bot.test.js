@@ -114,6 +114,7 @@ beforeEach(() => {
 });
 
 test("клиент указывает город перед адресом, и город добавляется к адресу заявки", async () => {
+  mockGetActiveEmployeesByCategory.mockResolvedValue([employee]);
   const category = categoryKeyboard().reply_markup.inline_keyboard[0][0].text;
 
   await bot.handleUpdate(callback("new_request", 100));
@@ -128,6 +129,15 @@ test("клиент указывает город перед адресом, и �
   const savedRow = sheetsClient.appendRow.mock.calls[0][1];
   expect(savedRow[COLUMNS.indexOf("client")]).toBe("ООО Ромашка");
   expect(savedRow[COLUMNS.indexOf("address")]).toBe("Киев, ул. Ленина, 1");
+  const employeeNotification = telegramCallApiSpy.mock.calls.find(
+    ([method, payload]) =>
+      method === "sendMessage" &&
+      String(payload.chat_id) === String(employee.telegramId) &&
+      payload.text.includes("Новая заявка"),
+  );
+  expect(employeeNotification[1].text).toContain(
+    "Срок исполнения: Завтра после 12:00\nКлиент: ООО Ромашка\nТелефон клиента: +380000000000",
+  );
   expect(
     telegramCallApiSpy.mock.calls.some(
       ([method, payload]) =>
