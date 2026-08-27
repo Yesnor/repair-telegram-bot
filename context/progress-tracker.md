@@ -21,6 +21,10 @@ Update this file after every meaningful implementation change.
 - Added a focused bot flow test for the new city/address behavior.
 - Added payment-sheet ID mirroring when creating a request.
 - Added bot menu command registration so users can press `Старт` instead of typing `/start`.
+- Renamed the `Заявки` sheet header from `Имя клиента` to `Client Telegram name`.
+- Renamed the `Заявки` sheet header from `Удобное время` to `Срок исполнения`.
+- Replaced the client request prompt after address with `Укажите крайний срок выполнения работ`.
+- Added a client-name step after category selection and save its value to the `Клиент` request column.
 
 ## In Progress
 
@@ -50,3 +54,8 @@ Update this file after every meaningful implementation change.
 - Client request creation now asks for city before street address; saved request addresses include both values.
 - New request creation appends the generated request ID to `Оплата та розрахунки` column A.
 - Bot startup/setup now registers `/start` in the Telegram menu with the description `Старт`.
+- `scripts/initSheets.js` now creates the `Заявки` sheet with `Client Telegram name` instead of `Имя клиента`.
+- `scripts/initSheets.js` now creates the `Заявки` sheet with `Срок исполнения` instead of `Удобное время`.
+- Client request flow now asks for the work deadline after the address step.
+- Client request flow now asks for the contractual customer name after category selection.
+- `Заявки` now includes the `Клиент` column immediately after `Client Telegram name`.

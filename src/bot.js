@@ -52,7 +52,7 @@ const requestWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Шаг 2: категория выбрана -> просим описание
+  // Шаг 2: категория выбрана -> просим имя заказчика
   async (ctx) => {
     if (!ctx.callbackQuery || !ctx.callbackQuery.data?.startsWith("cat:")) {
       await ctx.reply(
@@ -63,11 +63,22 @@ const requestWizard = new Scenes.WizardScene(
     const category = ctx.callbackQuery.data.replace("cat:", "");
     ctx.wizard.state.data = { category };
     await ctx.answerCbQuery();
-    await ctx.reply(`Категория: ${category}.\nОпишите проблему коротко:`);
+    await ctx.reply("Назовите имя заказчика согласно договору");
     return ctx.wizard.next();
   },
 
-  // Шаг 3: описание -> просим город
+  // Шаг 3: имя заказчика -> просим описание
+  async (ctx) => {
+    if (!ctx.message?.text) {
+      await ctx.reply("Пожалуйста, укажите имя заказчика.");
+      return;
+    }
+    ctx.wizard.state.data.client = ctx.message.text;
+    await ctx.reply("Опишите проблему коротко:");
+    return ctx.wizard.next();
+  },
+
+  // Шаг 4: описание -> просим город
   async (ctx) => {
     if (!ctx.message?.text) {
       await ctx.reply("Пожалуйста, опишите проблему.");
@@ -78,7 +89,7 @@ const requestWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Шаг 4: город -> просим адрес
+  // Шаг 5: город -> просим адрес
   async (ctx) => {
     if (!ctx.message?.text) {
       await ctx.reply("Пожалуйста, укажите свой город.");
@@ -89,18 +100,18 @@ const requestWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Шаг 5: адрес -> просим удобное время
+  // Шаг 6: адрес -> просим срок исполнения
   async (ctx) => {
     if (!ctx.message?.text) {
       await ctx.reply("Пожалуйста, укажите адрес.");
       return;
     }
     ctx.wizard.state.data.address = ctx.message.text;
-    await ctx.reply("В какое время вам удобно принять мастера?");
+    await ctx.reply("Укажите крайний срок выполнения работ");
     return ctx.wizard.next();
   },
 
-  // Шаг 6: время -> просим телефон
+  // Шаг 7: срок исполнения -> просим телефон
   async (ctx) => {
     if (!ctx.message?.text) {
       await ctx.reply("Пожалуйста, укажите удобное время.");
@@ -134,6 +145,7 @@ const requestWizard = new Scenes.WizardScene(
     const request = await createRequest({
       clientId: ctx.from.id,
       clientName,
+      client: data.client,
       phone,
       category: data.category,
       description: data.description,
@@ -201,8 +213,18 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
 
 function requestCompletionKeyboard(requestId) {
   return Markup.inlineKeyboard([
-    [Markup.button.callback("\u{1F4CE} Отправить файлы", `upload:${requestId}`)],
-    [Markup.button.callback("\u2611\uFE0F Закрыть заявку", `close:${requestId}`)],
+    [
+      Markup.button.callback(
+        "\u{1F4CE} Отправить файлы",
+        `upload:${requestId}`,
+      ),
+    ],
+    [
+      Markup.button.callback(
+        "\u2611\uFE0F Закрыть заявку",
+        `close:${requestId}`,
+      ),
+    ],
   ]);
 }
 
@@ -281,7 +303,10 @@ async function showMyAcceptedRequests(ctx, employee) {
 
     if (data.status === STATUS.DEPARTED) {
       buttons.unshift([
-        Markup.button.callback("\u{1F4CE} Отправить файлы", `upload:${data.id}`),
+        Markup.button.callback(
+          "\u{1F4CE} Отправить файлы",
+          `upload:${data.id}`,
+        ),
       ]);
     }
 
@@ -501,7 +526,10 @@ bot.action(/^depart:(.+)$/, async (ctx) => {
       [Markup.button.callback("☑️ Закрыть заявку", `close:${requestId}`)],
     ]),
   );
-  await ctx.reply("Можно добавить документы к заявке:", requestCompletionKeyboard(requestId));
+  await ctx.reply(
+    "Можно добавить документы к заявке:",
+    requestCompletionKeyboard(requestId),
+  );
 
   await notifyClient(
     ctx,
@@ -560,7 +588,8 @@ bot.on(["photo", "document"], async (ctx) => {
   try {
     const fileLink = await ctx.telegram.getFileLink(fileId);
     const response = await fetch(String(fileLink));
-    if (!response.ok) throw new Error(`Telegram file download failed: ${response.status}`);
+    if (!response.ok)
+      throw new Error(`Telegram file download failed: ${response.status}`);
     const buffer = Buffer.from(await response.arrayBuffer());
 
     if (!ctx.session.uploadFolderId) {
@@ -568,11 +597,17 @@ bot.on(["photo", "document"], async (ctx) => {
       const folder = await createRequestFolder(folderName);
       ctx.session.uploadFolderId = folder.id;
       found.data.photosLink =
-        folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}`;
+        folder.webViewLink ||
+        `https://drive.google.com/drive/folders/${folder.id}`;
       await saveRequest(found.rowNumber, found.data);
     }
 
-    await uploadFileToDrive(buffer, filename, mimeType, ctx.session.uploadFolderId);
+    await uploadFileToDrive(
+      buffer,
+      filename,
+      mimeType,
+      ctx.session.uploadFolderId,
+    );
 
     await ctx.reply(
       "Файл загружен. Отправьте следующий файл или нажмите «Закрыть заявку».",

@@ -22,6 +22,7 @@ describe("createRequest", () => {
     const result = await createRequest({
       clientId: 555,
       clientName: "Иван Иванов",
+      client: "ООО Ромашка",
       phone: "+79990000000",
       category: "Электрика",
       description: "Не работает розетка",
@@ -33,6 +34,7 @@ describe("createRequest", () => {
     expect(result.createdAt).toBe("2024-03-10_12:00:00");
     expect(result.status).toBe(STATUS.NEW);
     expect(result.employeeId).toBe("");
+    expect(result.client).toBe("ООО Ромашка");
     expect(result.notifiedMessages).toBe("[]");
 
     expect(sheetsClient.appendRow).toHaveBeenCalledTimes(2);
@@ -58,6 +60,7 @@ describe("createRequest", () => {
       convenientTime: "time",
     });
     expect(result.clientName).toBe("");
+    expect(result.client).toBe("");
     expect(result.phone).toBe("");
   });
 });
@@ -69,6 +72,7 @@ describe("findRequestById", () => {
       "2024-01-01_00:00:00",
       "111",
       "Иван",
+      "ООО Ромашка",
       "+7900",
       "Электрика",
       "desc1",
@@ -87,6 +91,7 @@ describe("findRequestById", () => {
       "2024-01-02_00:00:00",
       "222",
       "Пётр",
+      "ООО Строй",
       "+7901",
       "Сантехника",
       "desc2",

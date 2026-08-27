@@ -116,6 +116,7 @@ test("клиент указывает город перед адресом, и �
 
   await bot.handleUpdate(callback("new_request", 100));
   await bot.handleUpdate(callback(`cat:${category}`, 100));
+  await bot.handleUpdate(message("ООО Ромашка", 100));
   await bot.handleUpdate(message("Не работает розетка", 100));
   await bot.handleUpdate(message("Киев", 100));
   await bot.handleUpdate(message("ул. Ленина, 1", 100));
@@ -123,11 +124,19 @@ test("клиент указывает город перед адресом, и �
   await bot.handleUpdate(message("+380000000000", 100));
 
   const savedRow = sheetsClient.appendRow.mock.calls[0][1];
+  expect(savedRow[COLUMNS.indexOf("client")]).toBe("ООО Ромашка");
   expect(savedRow[COLUMNS.indexOf("address")]).toBe("Киев, ул. Ленина, 1");
   expect(
     telegramCallApiSpy.mock.calls.some(
       ([method, payload]) =>
         method === "sendMessage" && payload.text === "Укажите свой город",
+    ),
+  ).toBe(true);
+  expect(
+    telegramCallApiSpy.mock.calls.some(
+      ([method, payload]) =>
+        method === "sendMessage" &&
+        payload.text === "Назовите имя заказчика согласно договору",
     ),
   ).toBe(true);
 });
