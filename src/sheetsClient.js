@@ -75,4 +75,14 @@ async function updateRow(sheetName, rowNumber, row) {
   });
 }
 
-module.exports = { getSheets, getRows, appendRow, updateRow, colLetter };
+async function updateCell(sheetName, rowNumber, columnNumber, value) {
+  const sheets = await getSheets();
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${sheetName}!${colLetter(columnNumber)}${rowNumber}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[value]] },
+  });
+}
+
+module.exports = { getSheets, getRows, appendRow, updateRow, updateCell, colLetter };

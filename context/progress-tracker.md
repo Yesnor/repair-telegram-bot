@@ -48,6 +48,8 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
+- Completion now requires a work description and material cost; the description is saved to the requests sheet, and the cost to column J of the payment sheet.
+
 - Employee request cards now show `Клиент` between `Срок исполнения` and `Телефон клиента`.
 
 - Employee request status messages now keep a photo-confirmation reminder between the taken and departed status lines.

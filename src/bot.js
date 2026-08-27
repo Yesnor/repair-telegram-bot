@@ -6,6 +6,8 @@ const {
   createRequest,
   findRequestById,
   saveRequest,
+  getMaterialCost,
+  saveMaterialCost,
   getActiveRequestsByEmployee,
   getNewRequestsByCategory,
   STATUS,
@@ -215,8 +217,22 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
   }
 }
 
-function requestCompletionKeyboard(requestId) {
+function requestCompletionKeyboard(requestId, data = {}) {
+  const hasDescription = Boolean(String(data.description || "").trim());
+  const hasMaterialCost = Boolean(String(data.materialCost || "").trim());
   return Markup.inlineKeyboard([
+    [
+      Markup.button.callback(
+        `${hasDescription ? "✅" : ""}Введите описание работ`,
+        `work-description:${requestId}`,
+      ),
+    ],
+    [
+      Markup.button.callback(
+        `${hasMaterialCost ? "✅" : ""}Введите сумму затрат на материалы`,
+        `material-cost:${requestId}`,
+      ),
+    ],
     [
       Markup.button.callback(
         "\u{1F4CE} Отправить файлы",
@@ -293,7 +309,7 @@ async function showMyAcceptedRequests(ctx, employee) {
       `Описание: ${data.description}\n` +
       `Телефон клиента: ${data.phone}`;
 
-    const buttons =
+    let buttons =
       data.status === STATUS.TAKEN
         ? [
             [Markup.button.callback("🚗 Выехал на место", `depart:${data.id}`)],
@@ -313,6 +329,12 @@ async function showMyAcceptedRequests(ctx, employee) {
           `upload:${data.id}`,
         ),
       ]);
+    }
+
+    if (data.status === STATUS.DEPARTED) {
+      data.materialCost = await getMaterialCost(data.id);
+      buttons = requestCompletionKeyboard(data.id, data).reply_markup
+        .inline_keyboard;
     }
 
     await ctx.telegram.sendMessage(
@@ -481,7 +503,7 @@ bot.action(/^take:(.+)$/, async (ctx) => {
 
   await ctx.answerCbQuery("Заявка взята в работу!");
   await ctx.editMessageText(
-    `${ctx.callbackQuery.message.text}\n\n✅ Вы взяли заявку в работу.\n${WORK_PHOTO_REMINDER}`,
+    `${ctx.callbackQuery.message.text}\n\n✅ Вы взяли заявку в работу.\n\n${WORK_PHOTO_REMINDER}`,
     Markup.inlineKeyboard([
       [Markup.button.callback("🚗 Выехал на место", `depart:${requestId}`)],
       [
@@ -522,6 +544,7 @@ bot.action(/^depart:(.+)$/, async (ctx) => {
 
   found.data.status = STATUS.DEPARTED;
   found.data.departedAt = formatTimestamp();
+  found.data.materialCost = await getMaterialCost(requestId);
   await saveRequest(found.rowNumber, found.data);
 
   await ctx.answerCbQuery("Отмечено: выехал на место.");
@@ -533,7 +556,7 @@ bot.action(/^depart:(.+)$/, async (ctx) => {
   );
   await ctx.reply(
     "Можно добавить документы к заявке:",
-    requestCompletionKeyboard(requestId),
+    requestCompletionKeyboard(requestId, found.data),
   );
 
   await notifyClient(
@@ -560,9 +583,84 @@ bot.action(/^upload:(.+)$/, async (ctx) => {
 
   ctx.session.uploadRequestId = requestId;
   ctx.session.uploadFolderId = "";
+  found.data.materialCost = await getMaterialCost(requestId);
   await ctx.answerCbQuery();
   await ctx.reply(
     `Отправьте фотографии или документы по заявке №${requestId}. Можно отправить несколько файлов подряд.`,
+  );
+});
+
+async function prepareCompletionInput(ctx, requestId, field, prompt) {
+  const employee = await getEmployeeByTelegramId(ctx.from.id);
+  const found = await findRequestById(requestId);
+  if (
+    !found ||
+    !employee ||
+    String(found.data.employeeId) !== String(employee.telegramId) ||
+    found.data.status !== STATUS.DEPARTED
+  ) {
+    await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    return;
+  }
+
+  ctx.session.completionInput = { requestId, field };
+  await ctx.answerCbQuery();
+  await ctx.reply(prompt);
+}
+
+bot.action(/^work-description:(.+)$/, async (ctx) => {
+  await prepareCompletionInput(
+    ctx,
+    ctx.match[1],
+    "description",
+    "Введите описание выполненных работ:",
+  );
+});
+
+bot.action(/^material-cost:(.+)$/, async (ctx) => {
+  await prepareCompletionInput(
+    ctx,
+    ctx.match[1],
+    "materialCost",
+    "Введите сумму затрат на материалы:",
+  );
+});
+
+bot.on("text", async (ctx, next) => {
+  const input = ctx.session?.completionInput;
+  if (!input) return next();
+
+  const value = ctx.message.text.trim();
+  if (!value) {
+    await ctx.reply("Введите значение текстом.");
+    return;
+  }
+
+  const employee = await getEmployeeByTelegramId(ctx.from.id);
+  const found = await findRequestById(input.requestId);
+  if (
+    !found ||
+    !employee ||
+    String(found.data.employeeId) !== String(employee.telegramId) ||
+    found.data.status !== STATUS.DEPARTED
+  ) {
+    delete ctx.session.completionInput;
+    await ctx.reply("Ввод данных недоступен для этой заявки.");
+    return;
+  }
+
+  if (input.field === "description") {
+    found.data.description = value;
+    await saveRequest(found.rowNumber, found.data);
+  } else {
+    await saveMaterialCost(input.requestId, value);
+  }
+
+  found.data.materialCost = await getMaterialCost(input.requestId);
+  delete ctx.session.completionInput;
+  await ctx.reply(
+    "Сохранено.",
+    requestCompletionKeyboard(input.requestId, found.data),
   );
 });
 
@@ -616,7 +714,7 @@ bot.on(["photo", "document"], async (ctx) => {
 
     await ctx.reply(
       "Файл загружен. Отправьте следующий файл или нажмите «Закрыть заявку».",
-      requestCompletionKeyboard(requestId),
+      requestCompletionKeyboard(requestId, found.data),
     );
   } catch (err) {
     console.error("Не удалось загрузить файл в Google Drive:", {
@@ -640,6 +738,16 @@ bot.action(/^close:(.+)$/, async (ctx) => {
     String(found.data.employeeId) !== String(employee.telegramId)
   ) {
     await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    return;
+  }
+
+  const materialCost = await getMaterialCost(requestId);
+  if (
+    !String(found.data.description || "").trim() ||
+    !String(materialCost || "").trim()
+  ) {
+    await ctx.answerCbQuery();
+    await ctx.reply("Введите сумму затрат на материалы и описание работ!");
     return;
   }
 

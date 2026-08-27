@@ -1,5 +1,5 @@
 const { formatTimestamp } = require("./dateUtils");
-const { getRows, appendRow, updateRow } = require("./sheetsClient");
+const { getRows, appendRow, updateRow, updateCell } = require("./sheetsClient");
 
 const SHEET = "Заявки";
 const PAYMENTS_SHEET = "Оплата та розрахунки";
@@ -93,6 +93,19 @@ async function saveRequest(rowNumber, obj) {
   await updateRow(SHEET, rowNumber, objectToRow(obj));
 }
 
+async function getMaterialCost(requestId) {
+  const rows = (await getRows(PAYMENTS_SHEET)) || [];
+  const row = rows.find((item) => String(item[0]) === String(requestId));
+  return row ? row[9] || "" : "";
+}
+
+async function saveMaterialCost(requestId, amount) {
+  const rows = (await getRows(PAYMENTS_SHEET)) || [];
+  const index = rows.findIndex((item) => String(item[0]) === String(requestId));
+  if (index === -1) throw new Error(`Payment row not found for request ${requestId}`);
+  await updateCell(PAYMENTS_SHEET, index + 2, 10, amount);
+}
+
 // Возвращает { rowNumber, data } для всех новых (ещё не взятых) заявок категории.
 async function getNewRequestsByCategory(category) {
   const rows = await getRows(SHEET);
@@ -128,6 +141,8 @@ module.exports = {
   createRequest,
   findRequestById,
   saveRequest,
+  getMaterialCost,
+  saveMaterialCost,
   getNewRequestsByCategory,
   getActiveRequestsByEmployee,
 };

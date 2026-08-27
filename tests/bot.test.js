@@ -10,6 +10,7 @@ jest.mock("../src/sheetsClient", () => ({
   getRows: jest.fn(),
   appendRow: jest.fn(),
   updateRow: jest.fn(),
+  updateCell: jest.fn(),
 }));
 
 const mockFindRequestById = jest.fn();
@@ -193,6 +194,7 @@ test("сотрудник проходит статусы выезда и зак�
       text: `Заявка R1\n\n✅ Вы взяли заявку в работу.\n${WORK_PHOTO_REMINDER}\n\n🚗 Мастер выехал на место.`,
     }),
   );
+  sheetsClient.getRows.mockResolvedValue([["R1", "", "", "", "", "", "", "", "", "100"]]);
   await bot.handleUpdate(callback("close:R1"));
   expect(found.data.status).toBe(STATUS.CLOSED);
   expect(found.data.closedAt).toBe("2024-03-10_12:00:00");
