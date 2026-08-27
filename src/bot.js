@@ -779,9 +779,7 @@ bot.action(/^close:(.+)$/, async (ctx) => {
   delete ctx.session.uploadRequestId;
   delete ctx.session.uploadFolderId;
   delete ctx.session.uploadFolderLink;
-  await ctx.editMessageText(
-    `${ctx.callbackQuery.message.text}\n\n✅ Заявка закрыта.`,
-  );
+  await ctx.editMessageText(`✅ Заявка ${requestId} закрыта`);
 
   await notifyClient(
     ctx,
