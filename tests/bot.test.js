@@ -56,6 +56,8 @@ test("registers start command in the bot menu", async () => {
 });
 
 const employee = { telegramId: "42", name: "Анна", category: "Электрика" };
+const WORK_PHOTO_REMINDER =
+  "  Не забудьте на месте сделать фотоподтверждение выполненных работ!!!";
 const request = () => ({
   id: "R1",
   clientId: "100",
@@ -153,6 +155,12 @@ test("первый сотрудник берёт новую заявку, а п�
     takenAt: "2024-03-10_12:00:00",
   });
   expect(mockSaveRequest).toHaveBeenCalledWith(2, found.data);
+  expect(telegramCallApiSpy).toHaveBeenCalledWith(
+    "editMessageText",
+    expect.objectContaining({
+      text: `Заявка R1\n\n✅ Вы взяли заявку в работу.\n${WORK_PHOTO_REMINDER}`,
+    }),
+  );
 
   found.data.status = STATUS.TAKEN;
   await bot.handleUpdate(callback("take:R1", 43));
@@ -163,9 +171,18 @@ test("сотрудник проходит статусы выезда и зак�
   const found = { rowNumber: 2, data: { ...request(), status: STATUS.TAKEN, employeeId: "42" } };
   mockFindRequestById.mockResolvedValue(found);
 
-  await bot.handleUpdate(callback("depart:R1"));
+  const departUpdate = callback("depart:R1");
+  departUpdate.callback_query.message.text = `Заявка R1\n\n✅ Вы взяли заявку в работу.\n${WORK_PHOTO_REMINDER}`;
+
+  await bot.handleUpdate(departUpdate);
   expect(found.data.status).toBe(STATUS.DEPARTED);
   expect(found.data.departedAt).toBe("2024-03-10_12:00:00");
+  expect(telegramCallApiSpy).toHaveBeenCalledWith(
+    "editMessageText",
+    expect.objectContaining({
+      text: `Заявка R1\n\n✅ Вы взяли заявку в работу.\n${WORK_PHOTO_REMINDER}\n\n🚗 Мастер выехал на место.`,
+    }),
+  );
   await bot.handleUpdate(callback("close:R1"));
   expect(found.data.status).toBe(STATUS.CLOSED);
   expect(found.data.closedAt).toBe("2024-03-10_12:00:00");

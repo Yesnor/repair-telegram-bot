@@ -31,6 +31,9 @@ const CATEGORIES = [
 
 const BOT_COMMANDS = [{ command: "start", description: "Старт" }];
 
+const WORK_PHOTO_REMINDER =
+  "  Не забудьте на месте сделать фотоподтверждение выполненных работ!!!";
+
 function categoryKeyboard() {
   return Markup.inlineKeyboard(
     CATEGORIES.map((category) => [
@@ -476,7 +479,7 @@ bot.action(/^take:(.+)$/, async (ctx) => {
 
   await ctx.answerCbQuery("Заявка взята в работу!");
   await ctx.editMessageText(
-    `${ctx.callbackQuery.message.text}\n\n✅ Вы взяли заявку в работу.`,
+    `${ctx.callbackQuery.message.text}\n\n✅ Вы взяли заявку в работу.\n${WORK_PHOTO_REMINDER}`,
     Markup.inlineKeyboard([
       [Markup.button.callback("🚗 Выехал на место", `depart:${requestId}`)],
       [

@@ -26,6 +26,8 @@ Update this file after every meaningful implementation change.
 - Replaced the client request prompt after address with `Укажите крайний срок выполнения работ`.
 - Added a client-name step after category selection and save its value to the `Клиент` request column.
 
+- Added a photo-confirmation reminder to the employee notification after taking a request; it remains visible after marking departure.
+
 ## In Progress
 
 - Test suite passes: 6 suites, 24 tests.
@@ -43,6 +45,8 @@ Update this file after every meaningful implementation change.
 - [Decisions made that affect the system design or data model - include why the decision was made]
 
 ## Session Notes
+
+- Employee request status messages now keep a photo-confirmation reminder between the taken and departed status lines.
 
 - Added the `photosLink` request column and the `Ссылки на фото документов` sheet header.
 - Added Google Drive request folders named `yyyy-mm-dd_<request-id>` and employee upload flow before closing.
