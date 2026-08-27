@@ -762,6 +762,11 @@ bot.action(/^close:(.+)$/, async (ctx) => {
   }
 
   const materialCost = await getMaterialCost(requestId);
+  if (!String(found.data.photosLink || "").trim()) {
+    await ctx.answerCbQuery();
+    await ctx.reply("Прикрепите файлы!");
+    return;
+  }
   if (
     !found.data.workDescriptionEntered ||
     !String(materialCost || "").trim()
