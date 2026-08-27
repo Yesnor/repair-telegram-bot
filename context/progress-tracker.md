@@ -48,6 +48,8 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
+- Non-numeric material-cost input now prompts the employee to enter the amount using digits.
+- Material costs are converted to numeric values before being written to Google Sheets.
 - The final closed-request status now displays the green check mark.
 - Completion input now uses separate success messages for work descriptions and material costs.
 - The file-upload button now changes to ✅ after a successful upload.

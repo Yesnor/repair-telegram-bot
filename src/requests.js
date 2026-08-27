@@ -105,7 +105,11 @@ async function saveMaterialCost(requestId, amount) {
   const rows = (await getRows(PAYMENTS_SHEET)) || [];
   const index = rows.findIndex((item) => String(item[0]) === String(requestId));
   if (index === -1) throw new Error(`Payment row not found for request ${requestId}`);
-  await updateCell(PAYMENTS_SHEET, index + 2, 10, amount);
+  const numericAmount = Number(String(amount).trim().replace(",", "."));
+  if (!Number.isFinite(numericAmount)) {
+    throw new Error("Material cost must be a number");
+  }
+  await updateCell(PAYMENTS_SHEET, index + 2, 10, numericAmount);
 }
 
 // Возвращает { rowNumber, data } для всех новых (ещё не взятых) заявок категории.

@@ -638,6 +638,14 @@ bot.on("text", async (ctx, next) => {
     return;
   }
 
+  if (
+    input.field === "materialCost" &&
+    !Number.isFinite(Number(value.replace(",", ".")))
+  ) {
+    await ctx.reply("Введите сумму цифрами!");
+    return;
+  }
+
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   const found = await findRequestById(input.requestId);
   if (
