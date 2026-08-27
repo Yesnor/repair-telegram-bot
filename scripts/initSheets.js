@@ -24,7 +24,7 @@ const SHEETS = {
     "Дата закрытия заявки",
     "NotifiedMessages (служебное)",
     "Ссылки на фото документов",
-    "Work description entered (service)",
+    "Work description added (служебное)",
   ],
   Сотрудники: ["Telegram ID", "Имя", "Категория", "Активен (да/нет)"],
   "Оплата та розрахунки": [
