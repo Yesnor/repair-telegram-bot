@@ -42,6 +42,7 @@ describe("createRequest", () => {
       1,
       "Заявки",
       COLUMNS.map((key) => result[key]),
+      { clearFormat: true },
     );
     expect(sheetsClient.appendRow).toHaveBeenNthCalledWith(
       2,

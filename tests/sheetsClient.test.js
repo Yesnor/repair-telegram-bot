@@ -32,14 +32,43 @@ test.each([[1, "A"], [26, "Z"], [27, "AA"], [52, "AZ"], [53, "BA"]])(
 );
 
 test("использует правильные диапазоны Google Sheets для чтения и записи", async () => {
-  const values = { get: jest.fn().mockResolvedValue({ data: { values: [["R1"]] } }), append: jest.fn().mockResolvedValue({}), update: jest.fn().mockResolvedValue({}) };
-  google.sheets.mockReturnValue({ spreadsheets: { values } });
+  const values = {
+    get: jest.fn().mockResolvedValue({ data: { values: [["R1"]] } }),
+    append: jest.fn().mockResolvedValue({ data: { updates: { updatedRange: "Заявки!A3:B3" } } }),
+    update: jest.fn().mockResolvedValue({}),
+  };
+  const batchUpdate = jest.fn().mockResolvedValue({});
+  const get = jest.fn().mockResolvedValue({
+    data: { sheets: [{ properties: { title: "Заявки", sheetId: 123 } }] },
+  });
+  google.sheets.mockReturnValue({ spreadsheets: { values, get, batchUpdate } });
 
   await expect(getRows("Заявки")).resolves.toEqual([["R1"]]);
   await appendRow("Заявки", ["R2"]);
+  await appendRow("Заявки", ["R3", "value"], { clearFormat: true });
   await updateRow("Заявки", 4, ["R3", "value"]);
 
   expect(values.get).toHaveBeenCalledWith(expect.objectContaining({ range: "Заявки!A2:Z" }));
   expect(values.append).toHaveBeenCalledWith(expect.objectContaining({ range: "Заявки!A1" }));
   expect(values.update).toHaveBeenCalledWith(expect.objectContaining({ range: "Заявки!A4:B4" }));
+  expect(batchUpdate).toHaveBeenCalledWith({
+    spreadsheetId: process.env.SPREADSHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          repeatCell: {
+            range: {
+              sheetId: 123,
+              startRowIndex: 2,
+              endRowIndex: 3,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            cell: { userEnteredFormat: {} },
+            fields: "userEnteredFormat",
+          },
+        },
+      ],
+    },
+  });
 });

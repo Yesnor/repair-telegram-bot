@@ -29,10 +29,12 @@ Update this file after every meaningful implementation change.
 - Added a photo-confirmation reminder to the employee notification after taking a request; it remains visible after marking departure.
 - Added the contractual client name to employee request cards between deadline and client phone.
 - Renamed the employee request card deadline label from `Крайний срок` to `Срок исполнения`.
+- New request rows in `Заявки` now clear inherited Google Sheets formatting after append.
 
 ## In Progress
 
-- Test suite passes: 6 suites, 24 tests.
+- Focused request/Sheets tests pass: 2 suites, 11 tests.
+- Full `npm test` currently fails in 2 existing `tests/bot.test.js` expectations around employee status text and close prerequisites.
 
 ## Next Up
 
@@ -78,3 +80,4 @@ Update this file after every meaningful implementation change.
 - Client request flow now asks for the work deadline after the address step.
 - Client request flow now asks for the contractual customer name after category selection.
 - `Заявки` now includes the `Клиент` column immediately after `Client Telegram name`.
+- Appending to `Заявки` now resets the appended row's `userEnteredFormat` so status highlighting from the previous row is not copied to new requests.

@@ -72,7 +72,7 @@ async function createRequest(data) {
     photosLink: "",
     workDescriptionEntered: "",
   };
-  await appendRow(SHEET, objectToRow(obj));
+  await appendRow(SHEET, objectToRow(obj), { clearFormat: true });
   await appendRow(PAYMENTS_SHEET, [obj.id]);
   return obj;
 }

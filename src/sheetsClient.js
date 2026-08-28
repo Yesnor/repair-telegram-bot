@@ -4,6 +4,7 @@ const { createSheetsAuth } = require("./googleAuth");
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 let cachedSheetsApi = null;
+let cachedSheetIds = null;
 
 /**
  * Авторизация сервисного аккаунта и получение клиента Google Sheets API.
@@ -32,6 +33,51 @@ function colLetter(n) {
   return s;
 }
 
+async function getSheetId(sheets, sheetName) {
+  if (!cachedSheetIds) {
+    const meta = await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID,
+      fields: "sheets.properties(sheetId,title)",
+    });
+    cachedSheetIds = new Map(
+      meta.data.sheets.map((sheet) => [sheet.properties.title, sheet.properties.sheetId]),
+    );
+  }
+  const sheetId = cachedSheetIds.get(sheetName);
+  if (sheetId === undefined) throw new Error(`Sheet not found: ${sheetName}`);
+  return sheetId;
+}
+
+function rowNumberFromRange(range) {
+  const cellsRange = range.split("!").pop();
+  const match = cellsRange && cellsRange.match(/^[A-Z]+(\d+)(?::[A-Z]+\d+)?$/);
+  return match ? Number(match[1]) : null;
+}
+
+async function clearRowFormat(sheets, sheetName, rowNumber, columnCount) {
+  const sheetId = await getSheetId(sheets, sheetName);
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SPREADSHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: rowNumber - 1,
+              endRowIndex: rowNumber,
+              startColumnIndex: 0,
+              endColumnIndex: columnCount,
+            },
+            cell: { userEnteredFormat: {} },
+            fields: "userEnteredFormat",
+          },
+        },
+      ],
+    },
+  });
+}
+
 /**
  * Возвращает все строки данных листа (без заголовка), начиная со 2-й строки.
  * Индекс элемента в массиве i соответствует строке листа i + 2.
@@ -48,9 +94,9 @@ async function getRows(sheetName) {
 /**
  * Добавляет новую строку в конец листа.
  */
-async function appendRow(sheetName, row) {
+async function appendRow(sheetName, row, options = {}) {
   const sheets = await getSheets();
-  await sheets.spreadsheets.values.append({
+  const res = await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
     range: `${sheetName}!A1`,
     // RAW — записываем строки как есть, без автораспознавания Google Sheets.
@@ -60,6 +106,12 @@ async function appendRow(sheetName, row) {
     insertDataOption: "INSERT_ROWS",
     requestBody: { values: [row] },
   });
+  if (options.clearFormat) {
+    const updatedRange = res.data.updates.updatedRange;
+    const rowNumber = rowNumberFromRange(updatedRange);
+    if (!rowNumber) throw new Error(`Could not detect appended row from range: ${updatedRange}`);
+    await clearRowFormat(sheets, sheetName, rowNumber, row.length);
+  }
 }
 
 /**
