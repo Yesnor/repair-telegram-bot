@@ -54,6 +54,7 @@ Update this file after every meaningful implementation change.
 - Added dynamic city selection from the `Города` sheet, separate request city storage, and exact category-plus-city employee matching.
 - Employee rows now include `Город`; multiple active rows can assign multiple cities to one employee.
 - Reordered request columns so `Город` is between `Описание` and `Адрес`; added `Telegram name` after `Telegram ID` in `Сотрудники`.
+- City selection buttons now render two per row, and the Telegram menu label for `/start` is `Оставить заявку`.
 
 - The completion keyboard now reloads the saved material cost after file upload, preserving its ✅ marker.
 - Request closing now also requires successfully attached files.

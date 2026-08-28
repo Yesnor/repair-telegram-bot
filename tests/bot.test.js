@@ -35,7 +35,7 @@ jest.mock("../src/cities", () => ({
   getActiveCities: mockGetActiveCities,
 }));
 
-const { bot, categoryKeyboard, configureBotMenu, BOT_COMMANDS } = require("../src/bot");
+const { bot, categoryKeyboard, cityKeyboard, configureBotMenu, BOT_COMMANDS } = require("../src/bot");
 const { COLUMNS, STATUS } = require("../src/requests");
 const { sessionStore } = require("../src/sessionStore");
 const sheetsClient = require("../src/sheetsClient");
@@ -54,10 +54,18 @@ test("показывает каждую категорию отдельной с
 test("registers start command in the bot menu", async () => {
   await configureBotMenu();
 
-  expect(BOT_COMMANDS).toEqual([{ command: "start", description: "Старт" }]);
+  expect(BOT_COMMANDS).toEqual([{ command: "start", description: "Оставить заявку" }]);
   expect(telegramCallApiSpy).toHaveBeenCalledWith("setMyCommands", {
     commands: BOT_COMMANDS,
   });
+});
+
+test("показывает города по две кнопки в строке", () => {
+  const rows = cityKeyboard(["Киев", "Львов", "Одесса"]).reply_markup.inline_keyboard;
+
+  expect(rows).toHaveLength(2);
+  expect(rows[0]).toHaveLength(2);
+  expect(rows[1]).toHaveLength(1);
 });
 
 const employee = { telegramId: "42", name: "Анна", category: "Электрика", city: "Киев" };

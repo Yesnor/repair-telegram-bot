@@ -32,7 +32,7 @@ const CATEGORIES = [
   "Другое",
 ];
 
-const BOT_COMMANDS = [{ command: "start", description: "Старт" }];
+const BOT_COMMANDS = [{ command: "start", description: "Оставить заявку" }];
 
 const WORK_PHOTO_REMINDER =
   "  Не забудьте на месте сделать фотоподтверждение выполненных работ!!!";
@@ -46,9 +46,15 @@ function categoryKeyboard() {
 }
 
 function cityKeyboard(cities) {
-  return Markup.inlineKeyboard(
-    cities.map((city) => [Markup.button.callback(city, `city:${city}`)]),
-  );
+  const rows = [];
+  for (let i = 0; i < cities.length; i += 2) {
+    rows.push(
+      cities
+        .slice(i, i + 2)
+        .map((city) => Markup.button.callback(city, `city:${city}`)),
+    );
+  }
+  return Markup.inlineKeyboard(rows);
 }
 
 // ---------------------------------------------------------------------------
