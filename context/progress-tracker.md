@@ -55,6 +55,7 @@ Update this file after every meaningful implementation change.
 - Employee rows now include `Город`; multiple active rows can assign multiple cities to one employee.
 - Reordered request columns so `Город` is between `Описание` and `Адрес`; added `Telegram name` after `Telegram ID` in `Сотрудники`.
 - City selection buttons now render two per row, and the Telegram menu label for `/start` is `Оставить заявку`.
+- Production webhook now refreshes Telegram menu commands once per serverless instance, so the client sees the updated `Оставить заявку` label.
 
 - The completion keyboard now reloads the saved material cost after file upload, preserving its ✅ marker.
 - Request closing now also requires successfully attached files.

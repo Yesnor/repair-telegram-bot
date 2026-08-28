@@ -53,10 +53,7 @@ async function main() {
     throw new Error("Set SPREADSHEET_ID in .env before running init-sheets.");
   }
 
-  const auth = createSheetsAuth();
-  await auth.authorize();
-  const sheets = google.sheets({ version: "v4", auth });
-
+  const auth = createSheetsAuth(); 
   const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
   const existingTitles = meta.data.sheets.map((s) => s.properties.title);
 

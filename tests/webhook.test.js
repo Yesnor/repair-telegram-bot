@@ -1,4 +1,8 @@
-jest.mock("../src/bot", () => ({ bot: { handleUpdate: jest.fn() } }));
+const mockConfigureBotMenu = jest.fn().mockResolvedValue(undefined);
+jest.mock("../src/bot", () => ({
+  bot: { handleUpdate: jest.fn() },
+  configureBotMenu: mockConfigureBotMenu,
+}));
 
 const { bot } = require("../src/bot");
 const webhook = require("../api/webhook");
@@ -26,6 +30,7 @@ test("передаёт корректный update боту и отвечает 
   const body = { update_id: 1 };
   await webhook({ method: "POST", query: { secret: "secret" }, body }, res);
   expect(bot.handleUpdate).toHaveBeenCalledWith(body);
+  expect(mockConfigureBotMenu).toHaveBeenCalledTimes(1);
   expect(res.status).toHaveBeenCalledWith(200);
   expect(res.send).toHaveBeenCalledWith("OK");
 });

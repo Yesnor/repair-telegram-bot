@@ -1,4 +1,15 @@
-const { bot } = require('../src/bot');
+const { bot, configureBotMenu } = require('../src/bot');
+
+let menuConfiguration;
+
+function configureMenuOnce() {
+  if (!menuConfiguration) {
+    menuConfiguration = configureBotMenu().catch((err) => {
+      console.error('Не удалось обновить меню бота:', err.message);
+    });
+  }
+  return menuConfiguration;
+}
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -13,6 +24,7 @@ module.exports = async (req, res) => {
   }
 
   try {
+    await configureMenuOnce();
     await bot.handleUpdate(req.body);
   } catch (err) {
     console.error('Ошибка обработки update от Telegram:', err);
