@@ -10,9 +10,9 @@ beforeEach(() => {
 
 test("берет уникальные категории из колонки Database и игнорирует пустые строки", async () => {
   getRows.mockResolvedValue([
-    ["Киев", "да", " Электрика ", "electricity"],
-    ["Киев", "да", "Сантехника", "plumbing"],
-    ["Львов", "нет", "Электрика", "electricity"],
+    ["Киев", " Электрика ", "electricity", "1"],
+    ["Киев", "Сантехника", "plumbing", "2"],
+    ["Львов", "Электрика", "electricity", "3"],
     ["", "", "", ""],
   ]);
 
@@ -24,11 +24,11 @@ test("берет уникальные категории из колонки Dat
 });
 
 test("увеличивает счетчик заявок категории и возвращает ее код", async () => {
-  getRows.mockResolvedValue([["Киев", "да", "Мебель", "МР", "1"]]);
+  getRows.mockResolvedValue([["Киев", "Мебель", "МР", "1"]]);
 
   await expect(incrementCategoryRequestCount("Мебель")).resolves.toEqual({
     code: "МР",
     count: 2,
   });
-  expect(updateCell).toHaveBeenCalledWith("Database", 2, 5, 2);
+  expect(updateCell).toHaveBeenCalledWith("Database", 2, 4, 2);
 });

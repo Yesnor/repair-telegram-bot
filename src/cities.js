@@ -9,7 +9,7 @@ function normalize(value) {
 async function getActiveCities() {
   const rows = await getRows(SHEET);
   return rows
-    .filter((row) => normalize(row[0]) && normalize(row[1]) === 'да')
+    .filter((row) => normalize(row[0]))
     .map((row) => String(row[0]).trim());
 }
 

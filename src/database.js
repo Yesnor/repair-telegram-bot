@@ -9,7 +9,7 @@ function normalize(value) {
 async function getActiveCategories() {
   const rows = (await getRows(SHEET)) || [];
   const categories = rows
-    .map((row) => String(row[2] || "").trim())
+    .map((row) => String(row[1] || "").trim())
     .filter(Boolean);
 
   return [...new Set(categories)];
@@ -18,7 +18,7 @@ async function getActiveCategories() {
 async function incrementCategoryRequestCount(category) {
   const rows = (await getRows(SHEET)) || [];
   const rowIndex = rows.findIndex(
-    (row) => String(row[2] || "").trim() === String(category).trim(),
+    (row) => String(row[1] || "").trim() === String(category).trim(),
   );
 
   if (rowIndex === -1) {
@@ -26,8 +26,8 @@ async function incrementCategoryRequestCount(category) {
   }
 
   const row = rows[rowIndex];
-  const code = String(row[3] || "").trim();
-  const currentCount = Number(row[4] || 0);
+  const code = String(row[2] || "").trim();
+  const currentCount = Number(row[3] || 0);
 
   if (!code) {
     throw new Error(`Category code not found in Database: ${category}`);
@@ -37,7 +37,7 @@ async function incrementCategoryRequestCount(category) {
   }
 
   const nextCount = currentCount + 1;
-  await updateCell(SHEET, rowIndex + 2, 5, nextCount);
+  await updateCell(SHEET, rowIndex + 2, 4, nextCount);
 
   return { code, count: nextCount };
 }

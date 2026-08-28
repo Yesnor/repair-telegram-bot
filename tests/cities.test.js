@@ -5,13 +5,13 @@ const { getActiveCities } = require("../src/cities");
 
 beforeEach(() => jest.clearAllMocks());
 
-test("возвращает только активные города и убирает пробелы вокруг названия", async () => {
+test("возвращает города с непустым названием и убирает пробелы вокруг названия", async () => {
   getRows.mockResolvedValue([
-    [" Киев ", " да "],
-    ["Львов", "нет"],
-    ["", "да"],
+    [" Киев ", "Электрика", "ЭЛ", "1"],
+    ["Львов", "Сантехника", "СМ", "2"],
+    ["", "Мебель", "МР", "3"],
   ]);
 
-  await expect(getActiveCities()).resolves.toEqual(["Киев"]);
+  await expect(getActiveCities()).resolves.toEqual(["Киев", "Львов"]);
   expect(getRows).toHaveBeenCalledWith("Database");
 });
