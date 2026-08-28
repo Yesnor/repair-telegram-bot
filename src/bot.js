@@ -16,6 +16,7 @@ const {
   getEmployeeByTelegramId,
   getActiveEmployeesByCategory,
 } = require("./employees");
+const { getActiveCities } = require("./cities");
 
 const CATEGORIES = [
   "Электрика",
@@ -41,6 +42,12 @@ function categoryKeyboard() {
     CATEGORIES.map((category) => [
       Markup.button.callback(category, `cat:${category}`),
     ]),
+  );
+}
+
+function cityKeyboard(cities) {
+  return Markup.inlineKeyboard(
+    cities.map((city) => [Markup.button.callback(city, `city:${city}`)]),
   );
 }
 
@@ -90,17 +97,23 @@ const requestWizard = new Scenes.WizardScene(
       return;
     }
     ctx.wizard.state.data.description = ctx.message.text;
-    await ctx.reply("Укажите свой город");
+    const cities = await getActiveCities();
+    if (!cities.length) {
+      await ctx.reply("Список городов пока не настроен. Попробуйте позже.");
+      return;
+    }
+    await ctx.reply("Выберите свой город:", cityKeyboard(cities));
     return ctx.wizard.next();
   },
 
-  // Шаг 5: город -> просим адрес
+  // Шаг 5: город выбран -> просим адрес
   async (ctx) => {
-    if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, укажите свой город.");
+    if (!ctx.callbackQuery?.data?.startsWith("city:")) {
+      await ctx.reply("Пожалуйста, выберите город одной из кнопок выше.");
       return;
     }
-    ctx.wizard.state.data.city = ctx.message.text;
+    ctx.wizard.state.data.city = ctx.callbackQuery.data.replace("city:", "");
+    await ctx.answerCbQuery();
     await ctx.reply("Укажите адрес, куда нужно приехать мастеру:");
     return ctx.wizard.next();
   },
@@ -153,6 +166,7 @@ const requestWizard = new Scenes.WizardScene(
       client: data.client,
       phone,
       category: data.category,
+      city: data.city,
       description: data.description,
       address: `${data.city}, ${data.address}`,
       convenientTime: data.convenientTime,
@@ -179,7 +193,10 @@ const stage = new Scenes.Stage([requestWizard]);
 // ---------------------------------------------------------------------------
 
 async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
-  const allEmployees = await getActiveEmployeesByCategory(requestData.category);
+  const allEmployees = await getActiveEmployeesByCategory(
+    requestData.category,
+    requestData.city,
+  );
   const employees = allEmployees.filter(
     (e) =>
       !excludeEmployeeIds.some((id) => String(id) === String(e.telegramId)),
@@ -192,6 +209,7 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
         emp.telegramId,
         `🆕 Новая заявка №${requestData.id}\n` +
           `Категория: ${requestData.category}\n` +
+          `Город: ${requestData.city}\n` +
           `Адрес: ${requestData.address}\n` +
           `Описание: ${requestData.description}\n` +
           `Срок исполнения: ${requestData.convenientTime}\n` +
@@ -258,7 +276,10 @@ function employeeMenuKeyboard() {
 
 // Показывает необработанные заявки категории сотрудника с кнопкой "Взять в работу".
 async function showNewCategoryRequests(ctx, employee) {
-  const found = await getNewRequestsByCategory(employee.category);
+  const found = await getNewRequestsByCategory(
+    employee.category,
+    employee.cities?.length ? employee.cities : employee.city,
+  );
   if (!found.length) {
     await ctx.reply("Новых заявок в вашей категории пока нет.");
     return;
@@ -827,4 +848,4 @@ bot.catch((err, ctx) => {
   console.error(`Ошибка при обработке update ${ctx.updateType}:`, err);
 });
 
-module.exports = { bot, categoryKeyboard, configureBotMenu, BOT_COMMANDS };
+module.exports = { bot, categoryKeyboard, cityKeyboard, configureBotMenu, BOT_COMMANDS };

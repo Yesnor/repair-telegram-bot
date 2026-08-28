@@ -30,6 +30,10 @@ jest.mock("../src/employees", () => ({
   getEmployeeByTelegramId: mockGetEmployeeByTelegramId,
   getActiveEmployeesByCategory: mockGetActiveEmployeesByCategory,
 }));
+const mockGetActiveCities = jest.fn();
+jest.mock("../src/cities", () => ({
+  getActiveCities: mockGetActiveCities,
+}));
 
 const { bot, categoryKeyboard, configureBotMenu, BOT_COMMANDS } = require("../src/bot");
 const { COLUMNS, STATUS } = require("../src/requests");
@@ -56,7 +60,7 @@ test("registers start command in the bot menu", async () => {
   });
 });
 
-const employee = { telegramId: "42", name: "Анна", category: "Электрика" };
+const employee = { telegramId: "42", name: "Анна", category: "Электрика", city: "Киев" };
 const WORK_PHOTO_REMINDER =
   "  Не забудьте на месте сделать фотоподтверждение выполненных работ!!!";
 const request = () => ({
@@ -112,6 +116,7 @@ beforeEach(() => {
   );
   mockGetEmployeeByTelegramId.mockResolvedValue(employee);
   mockGetActiveEmployeesByCategory.mockResolvedValue([]);
+  mockGetActiveCities.mockResolvedValue(["Киев", "Львов"]);
 });
 
 test("клиент указывает город перед адресом, и город добавляется к адресу заявки", async () => {
@@ -122,13 +127,16 @@ test("клиент указывает город перед адресом, и �
   await bot.handleUpdate(callback(`cat:${category}`, 100));
   await bot.handleUpdate(message("ООО Ромашка", 100));
   await bot.handleUpdate(message("Не работает розетка", 100));
-  await bot.handleUpdate(message("Киев", 100));
+  await bot.handleUpdate(callback("city:Киев", 100));
   await bot.handleUpdate(message("ул. Ленина, 1", 100));
   await bot.handleUpdate(message("Завтра после 12:00", 100));
   await bot.handleUpdate(message("+380000000000", 100));
 
+  expect(mockGetActiveEmployeesByCategory).toHaveBeenCalledWith("Электрика", "Киев");
+
   const savedRow = sheetsClient.appendRow.mock.calls[0][1];
   expect(savedRow[COLUMNS.indexOf("client")]).toBe("ООО Ромашка");
+  expect(savedRow[COLUMNS.indexOf("city")]).toBe("Киев");
   expect(savedRow[COLUMNS.indexOf("address")]).toBe("Киев, ул. Ленина, 1");
   const employeeNotification = telegramCallApiSpy.mock.calls.find(
     ([method, payload]) =>
@@ -142,7 +150,7 @@ test("клиент указывает город перед адресом, и �
   expect(
     telegramCallApiSpy.mock.calls.some(
       ([method, payload]) =>
-        method === "sendMessage" && payload.text === "Укажите свой город",
+        method === "sendMessage" && payload.text === "Выберите свой город:",
     ),
   ).toBe(true);
   expect(

@@ -21,6 +21,7 @@ const COLUMNS = [
   "phone",
   "category",
   "description",
+  "city",
   "address",
   "convenientTime",
   "status",
@@ -60,6 +61,7 @@ async function createRequest(data) {
     phone: data.phone || "",
     category: data.category,
     description: data.description,
+    city: data.city || "",
     address: data.address,
     convenientTime: data.convenientTime,
     status: STATUS.NEW,
@@ -113,12 +115,18 @@ async function saveMaterialCost(requestId, amount) {
 }
 
 // Возвращает { rowNumber, data } для всех новых (ещё не взятых) заявок категории.
-async function getNewRequestsByCategory(category) {
+async function getNewRequestsByCategory(category, city) {
   const rows = await getRows(SHEET);
+  const cities = Array.isArray(city) ? city : [city];
+  const normalizedCities = cities.map((value) => String(value || '').trim().toLowerCase());
   const result = [];
   rows.forEach((row, i) => {
     const data = rowToObject(row);
-    if (data.category === category && data.status === STATUS.NEW) {
+    if (
+      data.category === category &&
+      normalizedCities.includes(String(data.city || '').trim().toLowerCase()) &&
+      data.status === STATUS.NEW
+    ) {
       result.push({ rowNumber: i + 2, data });
     }
   });

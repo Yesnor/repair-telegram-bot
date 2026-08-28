@@ -43,12 +43,17 @@ Update this file after every meaningful implementation change.
 ## Open Questions
 
 - Integration tests against live Telegram and Google Sheets are not part of the local suite; external APIs remain mocked.
+- Existing production employees must be assigned a value in the new `Город` column, and active cities must be added to `Города`.
 
 ## Architecture Decisions
 
 - [Decisions made that affect the system design or data model - include why the decision was made]
 
 ## Session Notes
+
+- Added dynamic city selection from the `Города` sheet, separate request city storage, and exact category-plus-city employee matching.
+- Employee rows now include `Город`; multiple active rows can assign multiple cities to one employee.
+- Reordered request columns so `Город` is between `Описание` and `Адрес`; added `Telegram name` after `Telegram ID` in `Сотрудники`.
 
 - The completion keyboard now reloads the saved material cost after file upload, preserving its ✅ marker.
 - Request closing now also requires successfully attached files.
