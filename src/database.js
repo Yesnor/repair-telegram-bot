@@ -15,7 +15,7 @@ async function getActiveCategories() {
   return [...new Set(categories)];
 }
 
-async function incrementCategoryRequestCount(category) {
+async function incrementRequestCount(category) {
   const rows = (await getRows(SHEET)) || [];
   const rowIndex = rows.findIndex(
     (row) => String(row[1] || "").trim() === String(category).trim(),
@@ -25,21 +25,20 @@ async function incrementCategoryRequestCount(category) {
     throw new Error(`Category not found in Database: ${category}`);
   }
 
-  const row = rows[rowIndex];
-  const code = String(row[2] || "").trim();
-  const currentCount = Number(row[3] || 0);
+  const code = String(rows[rowIndex][2] || "").trim();
+  const currentCount = Number(rows[0]?.[3] || 0);
 
   if (!code) {
     throw new Error(`Category code not found in Database: ${category}`);
   }
   if (!Number.isInteger(currentCount) || currentCount < 0) {
-    throw new Error(`Invalid request count in Database for category: ${category}`);
+    throw new Error("Invalid total request count in Database!D2");
   }
 
   const nextCount = currentCount + 1;
-  await updateCell(SHEET, rowIndex + 2, 4, nextCount);
+  await updateCell(SHEET, 2, 4, nextCount);
 
   return { code, count: nextCount };
 }
 
-module.exports = { getActiveCategories, incrementCategoryRequestCount };
+module.exports = { getActiveCategories, incrementRequestCount };

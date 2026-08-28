@@ -28,6 +28,8 @@ Update this file after every meaningful implementation change.
 - Added the `Количество заявок` column to `Database`; new request IDs now use the category code, current date, and incremented category counter.
 - Removed leading zero padding from the request counter in IDs: `КОДYYYYMMDD_N`.
 - Removed the `Активен (да/нет)` column from `Database`; a non-empty city value now means the city is active.
+- Changed `Database!D2` to a single global request counter; request IDs now use the total request number regardless of category.
+- Simplified the client notification shown when a request is taken into work.
 
 - Added a photo-confirmation reminder to the employee notification after taking a request; it remains visible after marking departure.
 - Added the contractual client name to employee request cards between deadline and client phone.

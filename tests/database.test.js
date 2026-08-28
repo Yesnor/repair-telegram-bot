@@ -1,7 +1,7 @@
 jest.mock("../src/sheetsClient", () => ({ getRows: jest.fn(), updateCell: jest.fn() }));
 
 const { getRows, updateCell } = require("../src/sheetsClient");
-const { getActiveCategories, incrementCategoryRequestCount } = require("../src/database");
+const { getActiveCategories, incrementRequestCount } = require("../src/database");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -23,10 +23,13 @@ test("берет уникальные категории из колонки Dat
   expect(getRows).toHaveBeenCalledWith("Database");
 });
 
-test("увеличивает счетчик заявок категории и возвращает ее код", async () => {
-  getRows.mockResolvedValue([["Киев", "Мебель", "МР", "1"]]);
+test("увеличивает общий счетчик заявок и возвращает код категории", async () => {
+  getRows.mockResolvedValue([
+    ["Киев", "Мебель", "МР", "1"],
+    ["Львов", "Электрика", "ЭЛ", ""],
+  ]);
 
-  await expect(incrementCategoryRequestCount("Мебель")).resolves.toEqual({
+  await expect(incrementRequestCount("Мебель")).resolves.toEqual({
     code: "МР",
     count: 2,
   });

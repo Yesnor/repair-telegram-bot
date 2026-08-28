@@ -548,7 +548,7 @@ bot.action(/^take:(.+)$/, async (ctx) => {
   await notifyClient(
     ctx,
     found.data,
-    `Ваша заявка №${requestId} взята в работу мастером ${employee.name}.`,
+    `Ваша заявка №${requestId} взята в работу.`,
   );
   await markOtherNotifications(
     ctx,

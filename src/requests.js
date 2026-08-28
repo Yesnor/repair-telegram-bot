@@ -1,6 +1,6 @@
 const { formatTimestamp } = require("./dateUtils");
 const { getRows, appendRow, updateRow, updateCell } = require("./sheetsClient");
-const { incrementCategoryRequestCount } = require("./database");
+const { incrementRequestCount } = require("./database");
 
 const SHEET = "Заявки";
 const PAYMENTS_SHEET = "Оплата та розрахунки";
@@ -49,7 +49,7 @@ function objectToRow(obj) {
 }
 
 async function generateId(category, date = new Date()) {
-  const { code, count } = await incrementCategoryRequestCount(category);
+  const { code, count } = await incrementRequestCount(category);
   const datePart = [
     date.getUTCFullYear(),
     String(date.getUTCMonth() + 1).padStart(2, "0"),
