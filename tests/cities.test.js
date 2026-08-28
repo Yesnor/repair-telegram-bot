@@ -13,5 +13,5 @@ test("возвращает только активные города и уби�
   ]);
 
   await expect(getActiveCities()).resolves.toEqual(["Киев"]);
-  expect(getRows).toHaveBeenCalledWith("Города");
+  expect(getRows).toHaveBeenCalledWith("Database");
 });

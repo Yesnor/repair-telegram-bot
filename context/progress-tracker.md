@@ -30,10 +30,11 @@ Update this file after every meaningful implementation change.
 - Added the contractual client name to employee request cards between deadline and client phone.
 - Renamed the employee request card deadline label from `Крайний срок` to `Срок исполнения`.
 - New request rows in `Заявки` now clear inherited Google Sheets formatting after append.
+- Replaced the `Города` sheet with a `Database` sheet containing city status, category names, and category codes; client category buttons now load from `Список категорий`.
 
 ## In Progress
 
-- Focused request/Sheets tests pass: 2 suites, 11 tests.
+- Focused city/category/Sheets tests pass: 3 suites, 8 tests.
 - Full `npm test` currently fails in 2 existing `tests/bot.test.js` expectations around employee status text and close prerequisites.
 
 ## Next Up
@@ -43,7 +44,7 @@ Update this file after every meaningful implementation change.
 ## Open Questions
 
 - Integration tests against live Telegram and Google Sheets are not part of the local suite; external APIs remain mocked.
-- Existing production employees must be assigned a value in the new `Город` column, and active cities must be added to `Города`.
+- Existing production employees must be assigned a value in the new `Город` column, and active cities/categories must be added to `Database`.
 
 ## Architecture Decisions
 

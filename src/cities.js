@@ -1,6 +1,6 @@
 const { getRows } = require('./sheetsClient');
 
-const SHEET = 'Города';
+const SHEET = 'Database';
 
 function normalize(value) {
   return String(value || '').trim().toLocaleLowerCase();

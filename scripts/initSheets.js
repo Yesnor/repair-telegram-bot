@@ -28,7 +28,12 @@ const SHEETS = {
     "Work description added (служебное)",
   ],
   Сотрудники: ["Telegram ID", "Telegram name", "Имя", "Категория", "Активен (да/нет)", "Город"],
-  Города: ["Город", "Активен (да/нет)"],
+  Database: [
+    "Город",
+    "Активен (да/нет)",
+    "Список категорий",
+    "Код категории",
+  ],
   "Оплата та розрахунки": [
     "ID",
     "",
@@ -54,13 +59,28 @@ async function main() {
   }
 
   const auth = createSheetsAuth(); 
+  const sheets = google.sheets({ version: "v4", auth });
   const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
   const existingTitles = meta.data.sheets.map((s) => s.properties.title);
 
   const requests = [];
+  const createdTitles = [];
+  const oldCitiesSheet = meta.data.sheets.find(
+    (sheet) => sheet.properties.title === "Города",
+  );
+  if (oldCitiesSheet && !existingTitles.includes("Database")) {
+    requests.push({
+      updateSheetProperties: {
+        properties: { sheetId: oldCitiesSheet.properties.sheetId, title: "Database" },
+        fields: "title",
+      },
+    });
+    existingTitles.splice(existingTitles.indexOf("Города"), 1, "Database");
+  }
   for (const title of Object.keys(SHEETS)) {
     if (!existingTitles.includes(title)) {
       requests.push({ addSheet: { properties: { title } } });
+      createdTitles.push(title);
     }
   }
   if (requests.length) {
@@ -70,7 +90,7 @@ async function main() {
     });
     console.log(
       "Созданы листы:",
-      requests.map((r) => r.addSheet.properties.title),
+      createdTitles,
     );
   }
 

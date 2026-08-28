@@ -17,6 +17,7 @@ const {
   getActiveEmployeesByCategory,
 } = require("./employees");
 const { getActiveCities } = require("./cities");
+const { getActiveCategories } = require("./database");
 
 const CATEGORIES = [
   "Электрика",
@@ -37,9 +38,9 @@ const BOT_COMMANDS = [{ command: "start", description: "Оставить зая�
 const WORK_PHOTO_REMINDER =
   "  Не забудьте на месте сделать фотоподтверждение выполненных работ!!!";
 
-function categoryKeyboard() {
+function categoryKeyboard(categories = CATEGORIES) {
   return Markup.inlineKeyboard(
-    CATEGORIES.map((category) => [
+    categories.map((category) => [
       Markup.button.callback(category, `cat:${category}`),
     ]),
   );
@@ -66,7 +67,8 @@ const requestWizard = new Scenes.WizardScene(
 
   // Шаг 1: выбор категории
   async (ctx) => {
-    await ctx.reply("Выберите категорию услуги:", categoryKeyboard());
+    const categories = await getActiveCategories();
+    await ctx.reply("Выберите категорию услуги:", categoryKeyboard(categories));
     return ctx.wizard.next();
   },
 
