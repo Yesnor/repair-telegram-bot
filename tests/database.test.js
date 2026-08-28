@@ -1,9 +1,12 @@
-jest.mock("../src/sheetsClient", () => ({ getRows: jest.fn() }));
+jest.mock("../src/sheetsClient", () => ({ getRows: jest.fn(), updateCell: jest.fn() }));
 
-const { getRows } = require("../src/sheetsClient");
-const { getActiveCategories } = require("../src/database");
+const { getRows, updateCell } = require("../src/sheetsClient");
+const { getActiveCategories, incrementCategoryRequestCount } = require("../src/database");
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  updateCell.mockResolvedValue(undefined);
+});
 
 test("берет уникальные категории из колонки Database и игнорирует пустые строки", async () => {
   getRows.mockResolvedValue([
@@ -18,4 +21,14 @@ test("берет уникальные категории из колонки Dat
     "Сантехника",
   ]);
   expect(getRows).toHaveBeenCalledWith("Database");
+});
+
+test("увеличивает счетчик заявок категории и возвращает ее код", async () => {
+  getRows.mockResolvedValue([["Киев", "да", "Мебель", "МР", "1"]]);
+
+  await expect(incrementCategoryRequestCount("Мебель")).resolves.toEqual({
+    code: "МР",
+    count: 2,
+  });
+  expect(updateCell).toHaveBeenCalledWith("Database", 2, 5, 2);
 });

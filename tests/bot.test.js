@@ -12,6 +12,10 @@ jest.mock("../src/sheetsClient", () => ({
   updateRow: jest.fn(),
   updateCell: jest.fn(),
 }));
+jest.mock("../src/database", () => ({
+  getActiveCategories: jest.fn(),
+  incrementCategoryRequestCount: jest.fn(),
+}));
 
 const mockFindRequestById = jest.fn();
 const mockSaveRequest = jest.fn();
@@ -39,6 +43,7 @@ const { bot, categoryKeyboard, cityKeyboard, configureBotMenu, BOT_COMMANDS } = 
 const { COLUMNS, STATUS } = require("../src/requests");
 const { sessionStore } = require("../src/sessionStore");
 const sheetsClient = require("../src/sheetsClient");
+const { incrementCategoryRequestCount } = require("../src/database");
 const Telegram = require("../node_modules/telegraf/lib/telegram").default;
 
 const telegramCallApiSpy = jest.spyOn(Telegram.prototype, "callApi");
@@ -125,6 +130,7 @@ beforeEach(() => {
   mockGetEmployeeByTelegramId.mockResolvedValue(employee);
   mockGetActiveEmployeesByCategory.mockResolvedValue([]);
   mockGetActiveCities.mockResolvedValue(["Киев", "Львов"]);
+  incrementCategoryRequestCount.mockResolvedValue({ code: "EL", count: 1 });
 });
 
 test("клиент указывает город перед адресом, и город добавляется к адресу заявки", async () => {

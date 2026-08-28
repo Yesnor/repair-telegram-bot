@@ -1,5 +1,9 @@
 jest.mock("../src/sheetsClient");
+jest.mock("../src/database", () => ({
+  incrementCategoryRequestCount: jest.fn(),
+}));
 const sheetsClient = require("../src/sheetsClient");
+const { incrementCategoryRequestCount } = require("../src/database");
 const {
   createRequest,
   findRequestById,
@@ -18,6 +22,7 @@ describe("createRequest", () => {
 
   it("builds a new request with status NEW and appends it as a row", async () => {
     sheetsClient.appendRow.mockResolvedValue(undefined);
+    incrementCategoryRequestCount.mockResolvedValue({ code: "EL", count: 1 });
 
     const result = await createRequest({
       clientId: 555,
@@ -30,7 +35,7 @@ describe("createRequest", () => {
       convenientTime: "Завтра утром",
     });
 
-    expect(result.id).toBe(`R${Date.now()}`);
+    expect(result.id).toBe("EL20240310_1");
     expect(result.createdAt).toBe("2024-03-10_12:00:00");
     expect(result.status).toBe(STATUS.NEW);
     expect(result.employeeId).toBe("");
@@ -53,6 +58,7 @@ describe("createRequest", () => {
 
   it("falls back to empty strings for optional client fields", async () => {
     sheetsClient.appendRow.mockResolvedValue(undefined);
+    incrementCategoryRequestCount.mockResolvedValue({ code: "DR", count: 2 });
     const result = await createRequest({
       clientId: 1,
       category: "Другое",

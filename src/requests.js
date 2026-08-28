@@ -1,5 +1,6 @@
 const { formatTimestamp } = require("./dateUtils");
 const { getRows, appendRow, updateRow, updateCell } = require("./sheetsClient");
+const { incrementCategoryRequestCount } = require("./database");
 
 const SHEET = "Заявки";
 const PAYMENTS_SHEET = "Оплата та розрахунки";
@@ -47,13 +48,20 @@ function objectToRow(obj) {
   return COLUMNS.map((key) => obj[key]);
 }
 
-function generateId() {
-  return `R${Date.now()}`;
+async function generateId(category, date = new Date()) {
+  const { code, count } = await incrementCategoryRequestCount(category);
+  const datePart = [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, "0"),
+    String(date.getUTCDate()).padStart(2, "0"),
+  ].join("");
+
+  return `${code}${datePart}_${count}`;
 }
 
 async function createRequest(data) {
   const obj = {
-    id: generateId(),
+    id: await generateId(data.category),
     createdAt: formatTimestamp(),
     clientId: data.clientId,
     clientName: data.clientName || "",
@@ -157,6 +165,7 @@ module.exports = {
   saveRequest,
   getMaterialCost,
   saveMaterialCost,
+  generateId,
   getNewRequestsByCategory,
   getActiveRequestsByEmployee,
 };

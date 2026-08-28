@@ -25,6 +25,8 @@ Update this file after every meaningful implementation change.
 - Renamed the `Заявки` sheet header from `Удобное время` to `Срок исполнения`.
 - Replaced the client request prompt after address with `Укажите крайний срок выполнения работ`.
 - Added a client-name step after category selection and save its value to the `Клиент` request column.
+- Added the `Количество заявок` column to `Database`; new request IDs now use the category code, current date, and incremented category counter.
+- Removed leading zero padding from the request counter in IDs: `КОДYYYYMMDD_N`.
 
 - Added a photo-confirmation reminder to the employee notification after taking a request; it remains visible after marking departure.
 - Added the contractual client name to employee request cards between deadline and client phone.
