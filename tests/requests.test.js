@@ -10,6 +10,7 @@ const {
   saveRequest,
   STATUS,
   COLUMNS,
+  getNewRequestsByCategory,
 } = require("../src/requests");
 
 describe("createRequest", () => {
@@ -160,5 +161,30 @@ describe("saveRequest", () => {
       7,
       COLUMNS.map((k) => obj[k]),
     );
+  });
+});
+
+describe("getNewRequestsByCategory", () => {
+  it("finds new requests for multiple categories and cities", async () => {
+    sheetsClient.getRows.mockResolvedValue([
+      ["R1", "", "", "", "", "", "electric", "", "kyiv", "", "", STATUS.NEW],
+      ["R2", "", "", "", "", "", "plumbing", "", "lviv", "", "", STATUS.NEW],
+      ["R3", "", "", "", "", "", "electric", "", "odesa", "", "", STATUS.NEW],
+    ]);
+
+    const result = await getNewRequestsByCategory(
+      ["electric", "plumbing"],
+      ["kyiv", "lviv"],
+    );
+
+    expect(result.map(({ data }) => data.id)).toEqual(["R1", "R2"]);
+  });
+
+  it("supports wildcard category and city access", async () => {
+    sheetsClient.getRows.mockResolvedValue([
+      ["R1", "", "", "", "", "", "electric", "", "kyiv", "", "", STATUS.NEW],
+    ]);
+
+    await expect(getNewRequestsByCategory(["*"], ["*"])).resolves.toHaveLength(1);
   });
 });

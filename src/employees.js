@@ -2,24 +2,37 @@ const { getRows } = require('./sheetsClient');
 
 const SHEET = 'Сотрудники';
 
-// Колонки листа "Сотрудники": TelegramID | Имя | Категория | Активен (да/нет) | Город
+function parseList(value) {
+  return String(value || '')
+    .split(';')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function matches(value, allowedValues) {
+  const normalizedValue = String(value || '').trim().toLowerCase();
+  return allowedValues.includes('*') || allowedValues.includes(normalizedValue);
+}
 
 async function getEmployeeByTelegramId(telegramId) {
   const rows = await getRows(SHEET);
-  const employeeRows = rows.filter((r) => String(r[0]) === String(telegramId));
-  const row = employeeRows.find((r) => (r[4] || '').trim().toLowerCase() === 'да');
+  const row = rows.find(
+    (item) =>
+      String(item[0]) === String(telegramId) &&
+      String(item[5] || '').trim().toLowerCase() === 'да',
+  );
   if (!row) return null;
-  const cities = [...new Set(employeeRows
-    .filter((r) => (r[4] || '').trim().toLowerCase() === 'да')
-    .map((r) => String(r[5] || '').trim())
-    .filter(Boolean))];
+
+  const categories = parseList(row[3]);
+  const cities = parseList(row[4]);
   return {
     telegramId: row[0],
     telegramName: row[1] || '',
     name: row[2] || '',
     category: row[3] || '',
-    active: (row[4] || '').trim().toLowerCase() === 'да',
-    city: row[5] || '',
+    categories,
+    active: true,
+    city: row[4] || '',
     cities,
   };
 }
@@ -27,13 +40,21 @@ async function getEmployeeByTelegramId(telegramId) {
 async function getActiveEmployeesByCategory(category, city) {
   const rows = await getRows(SHEET);
   return rows
-    .filter(
-      (r) =>
-        r[3] === category &&
-        (r[4] || '').trim().toLowerCase() === 'да' &&
-        String(r[5] || '').trim().toLowerCase() === String(city || '').trim().toLowerCase(),
-    )
-    .map((r) => ({ telegramId: r[0], name: r[2] || '', category: r[3], city: r[5] || '' }));
+    .filter((row) => {
+      const categories = parseList(row[3]);
+      const cities = parseList(row[4]);
+      return (
+        String(row[5] || '').trim().toLowerCase() === 'да' &&
+        matches(category, categories) &&
+        matches(city, cities)
+      );
+    })
+    .map((row) => ({
+      telegramId: row[0],
+      name: row[2] || '',
+      category: row[3] || '',
+      city: row[4] || '',
+    }));
 }
 
 module.exports = { getEmployeeByTelegramId, getActiveEmployeesByCategory };

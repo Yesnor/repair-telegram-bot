@@ -285,7 +285,7 @@ function employeeMenuKeyboard() {
 // Показывает необработанные заявки категории сотрудника с кнопкой "Взять в работу".
 async function showNewCategoryRequests(ctx, employee) {
   const found = await getNewRequestsByCategory(
-    employee.category,
+    employee.categories?.length ? employee.categories : employee.category,
     employee.cities?.length ? employee.cities : employee.city,
   );
   if (!found.length) {

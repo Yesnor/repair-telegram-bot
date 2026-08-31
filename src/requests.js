@@ -125,14 +125,20 @@ async function saveMaterialCost(requestId, amount) {
 // Возвращает { rowNumber, data } для всех новых (ещё не взятых) заявок категории.
 async function getNewRequestsByCategory(category, city) {
   const rows = await getRows(SHEET);
-  const cities = Array.isArray(city) ? city : [city];
-  const normalizedCities = cities.map((value) => String(value || '').trim().toLowerCase());
+  const categories = (Array.isArray(category) ? category : [category])
+    .flatMap((value) => String(value || '').split(';'))
+    .map((value) => String(value).trim().toLowerCase())
+    .filter(Boolean);
+  const cities = (Array.isArray(city) ? city : [city])
+    .flatMap((value) => String(value || '').split(';'))
+    .map((value) => String(value).trim().toLowerCase())
+    .filter(Boolean);
   const result = [];
   rows.forEach((row, i) => {
     const data = rowToObject(row);
     if (
-      data.category === category &&
-      normalizedCities.includes(String(data.city || '').trim().toLowerCase()) &&
+      (categories.includes('*') || categories.includes(String(data.category || '').trim().toLowerCase())) &&
+      (cities.includes('*') || cities.includes(String(data.city || '').trim().toLowerCase())) &&
       data.status === STATUS.NEW
     ) {
       result.push({ rowNumber: i + 2, data });

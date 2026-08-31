@@ -5,27 +5,33 @@ const { getEmployeeByTelegramId, getActiveEmployeesByCategory } = require("../sr
 
 beforeEach(() => jest.clearAllMocks());
 
-test("возвращает сотрудника и нормализует признак активности", async () => {
-  getRows.mockResolvedValue([["42", "tg-name", "Анна", "Электрика", " ДА ", "Киев"]]);
+test("возвращает сотрудника со списками категорий и городов", async () => {
+  getRows.mockResolvedValue([
+    ["42", "tg-name", "Анна", " Электрика; Сантехника ", " Киев; Львов ", " ДА "],
+  ]);
+
   await expect(getEmployeeByTelegramId(42)).resolves.toEqual({
     telegramId: "42",
     telegramName: "tg-name",
     name: "Анна",
-    category: "Электрика",
+    category: " Электрика; Сантехника ",
+    categories: ["электрика", "сантехника"],
     active: true,
-    city: "Киев",
-    cities: ["Киев"],
+    city: " Киев; Львов ",
+    cities: ["киев", "львов"],
   });
 });
 
-test("возвращает только активных сотрудников нужной категории и города", async () => {
+test("возвращает только активных сотрудников с совпадающими категорией и городом", async () => {
   getRows.mockResolvedValue([
-    ["1", "tg-1", "Анна", "Электрика", "да", "Киев"],
-    ["2", "tg-2", "Борис", "Электрика", "нет", "Киев"],
-    ["3", "tg-3", "Вера", "Сантехника", "да", "Киев"],
-    ["4", "tg-4", "Олег", "Электрика", "да", "Львов"],
+    ["1", "tg-1", "Анна", "Электрика; Сантехника", "Киев; Львов", "да"],
+    ["2", "tg-2", "Борис", "*", "*", "да"],
+    ["3", "tg-3", "Вера", "Сантехника", "Киев", "нет"],
+    ["4", "tg-4", "Олег", "Электрика", "Одесса", "да"],
   ]);
-  await expect(getActiveEmployeesByCategory("Электрика", "Киев")).resolves.toEqual([
-    { telegramId: "1", name: "Анна", category: "Электрика", city: "Киев" },
+
+  await expect(getActiveEmployeesByCategory("Сантехника", "Львов")).resolves.toEqual([
+    { telegramId: "1", name: "Анна", category: "Электрика; Сантехника", city: "Киев; Львов" },
+    { telegramId: "2", name: "Борис", category: "*", city: "*" },
   ]);
 });

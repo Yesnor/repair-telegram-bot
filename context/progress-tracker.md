@@ -36,6 +36,7 @@ Update this file after every meaningful implementation change.
 - Renamed the employee request card deadline label from `Крайний срок` to `Срок исполнения`.
 - New request rows in `Заявки` now clear inherited Google Sheets formatting after append.
 - Replaced the `Города` sheet with a `Database` sheet containing city status, category names, and category codes; client category buttons now load from `Список категорий`.
+- Changed the `Сотрудники` sheet to store one row per employee with semicolon-separated `Категории` and `Города`; `*` matches all categories or cities.
 
 ## In Progress
 
@@ -49,11 +50,11 @@ Update this file after every meaningful implementation change.
 ## Open Questions
 
 - Integration tests against live Telegram and Google Sheets are not part of the local suite; external APIs remain mocked.
-- Existing production employees must be assigned a value in the new `Город` column, and active cities/categories must be added to `Database`.
+- Existing production employees must be migrated to the new `Категории`, `Города`, and `Активен (да/нет)` columns; active cities/categories must be added to `Database`.
 
 ## Architecture Decisions
 
-- [Decisions made that affect the system design or data model - include why the decision was made]
+- Store one employee per row; keep multiple categories and cities as semicolon-separated values, with `*` representing all. This avoids duplicate employee rows and avoids category-city combinations.
 
 ## Session Notes
 
