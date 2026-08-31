@@ -67,6 +67,14 @@ localDev.js           — локальный запуск через long pollin
      -d '{"url":"https://ваш-проект.vercel.app/api/webhook?secret=<WEBHOOK_SECRET>"}'
    ```
 
+   Для удаления webhook выполните:
+
+   ```
+   npm run delete-webhook
+   ```
+
+   Команда использует `BOT_TOKEN` из `.env` и вызывает Telegram Bot API.
+
 Готово — бот работает через webhook, отдельного постоянно запущенного сервера не требуется.
 
 ## 3. Локальная разработка

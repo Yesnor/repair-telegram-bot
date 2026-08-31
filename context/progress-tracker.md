@@ -58,6 +58,10 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
+- Добавлен рабочий скрипт `scripts/deleteWebhook.js` для удаления Telegram webhook через `npm run delete-webhook`; команда документирована в README.
+
+- Обновлён `context/project-overview.md`: описание приведено в соответствие с текущим MVP — динамические города и категории, многозначные привязки сотрудников, глобальный счётчик ID, Google Drive-файлы, обязательные данные для закрытия и текущие ограничения тестирования.
+
 - Added dynamic city selection from the `Города` sheet, separate request city storage, and exact category-plus-city employee matching.
 - Employee rows now include `Город`; multiple active rows can assign multiple cities to one employee.
 - Reordered request columns so `Город` is between `Описание` and `Адрес`; added `Telegram name` after `Telegram ID` in `Сотрудники`.
