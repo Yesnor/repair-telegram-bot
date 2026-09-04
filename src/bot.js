@@ -24,7 +24,7 @@ const CATEGORIES = t("categories");
 
 const BOT_COMMANDS = [{ command: "start", description: t("commandStart") }];
 const EMPLOYEE_COMMANDS = [
-  { command: "start", description: " " },
+  { command: "start", description: "Старт" },
   { command: "newrequests", description: t("employee.menuNew") },
   { command: "myrequests", description: t("employee.menuMine") },
 ];
@@ -410,20 +410,24 @@ async function configureChatMenu(chatId, commands) {
 bot.start(async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (employee) {
-    await configureChatMenu(ctx.chat.id, EMPLOYEE_COMMANDS);
     await ctx.reply(
       t("employee.greeting", employee),
       employeeMenuKeyboard(),
     );
+    await configureChatMenu(ctx.chat.id, EMPLOYEE_COMMANDS).catch((err) =>
+      console.error("Не удалось обновить меню сотрудника:", err.message),
+    );
     return;
   }
 
-  await configureChatMenu(ctx.chat.id, BOT_COMMANDS);
   await ctx.reply(
     t("employee.welcome"),
     Markup.inlineKeyboard([
       Markup.button.callback(`📝 ${t("commandStart")}`, "new_request"),
     ]),
+  );
+  await configureChatMenu(ctx.chat.id, BOT_COMMANDS).catch((err) =>
+    console.error("Не удалось обновить меню клиента:", err.message),
   );
 });
 
