@@ -7,7 +7,7 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 const SHEETS = {
   Заявки: t("sheetHeaders.requests"),
-  Сотрудники: t("sheetHeaders.employees"),
+  Співробітники: t("sheetHeaders.employees"),
   Database: t("sheetHeaders.database"),
   "Оплата та розрахунки": t("sheetHeaders.payments"),
   Sessions: t("sheetHeaders.sessions"),
