@@ -18,7 +18,7 @@ async function main() {
     throw new Error("Set SPREADSHEET_ID in .env before running init-sheets.");
   }
 
-  const auth = createSheetsAuth(); 
+  const auth = createSheetsAuth();
   const sheets = google.sheets({ version: "v4", auth });
   const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
   const existingTitles = meta.data.sheets.map((s) => s.properties.title);
@@ -31,7 +31,10 @@ async function main() {
   if (oldCitiesSheet && !existingTitles.includes("Database")) {
     requests.push({
       updateSheetProperties: {
-        properties: { sheetId: oldCitiesSheet.properties.sheetId, title: "Database" },
+        properties: {
+          sheetId: oldCitiesSheet.properties.sheetId,
+          title: "Database",
+        },
         fields: "title",
       },
     });
@@ -48,10 +51,7 @@ async function main() {
       spreadsheetId: SPREADSHEET_ID,
       requestBody: { requests },
     });
-    console.log(
-      "Созданы листы:",
-      createdTitles,
-    );
+    console.log("Созданы листы:", createdTitles);
   }
 
   for (const [title, header] of Object.entries(SHEETS)) {

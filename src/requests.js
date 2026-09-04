@@ -49,6 +49,16 @@ function objectToRow(obj) {
   return COLUMNS.map((key) => obj[key]);
 }
 
+function normalizeValue(value) {
+  return String(value || '')
+    .normalize('NFC')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase();
+}
+
 async function generateId(category, date = new Date()) {
   const { code, count } = await incrementRequestCount(category);
   const datePart = [
@@ -128,19 +138,19 @@ async function getNewRequestsByCategory(category, city) {
   const rows = await getRows(SHEET);
   const categories = (Array.isArray(category) ? category : [category])
     .flatMap((value) => String(value || '').split(';'))
-    .map((value) => String(value).trim().toLowerCase())
+    .map(normalizeValue)
     .filter(Boolean);
   const cities = (Array.isArray(city) ? city : [city])
     .flatMap((value) => String(value || '').split(';'))
-    .map((value) => String(value).trim().toLowerCase())
+    .map(normalizeValue)
     .filter(Boolean);
   const result = [];
   rows.forEach((row, i) => {
     const data = rowToObject(row);
     if (
-      (categories.includes('*') || categories.includes(String(data.category || '').trim().toLowerCase())) &&
-      (cities.includes('*') || cities.includes(String(data.city || '').trim().toLowerCase())) &&
-      data.status === STATUS.NEW
+      (categories.includes('*') || categories.includes(normalizeValue(data.category))) &&
+      (cities.includes('*') || cities.includes(normalizeValue(data.city))) &&
+      normalizeValue(data.status) === normalizeValue(STATUS.NEW)
     ) {
       result.push({ rowNumber: i + 2, data });
     }

@@ -6,18 +6,28 @@ const SHEET = t('sheetNames.employees');
 function parseList(value) {
   return String(value || '')
     .split(';')
-    .map((item) => item.trim().toLowerCase())
+    .map(normalizeValue)
     .filter(Boolean);
 }
 
+function normalizeValue(value) {
+  return String(value || '')
+    .normalize('NFC')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase();
+}
+
 function matches(value, allowedValues) {
-  const normalizedValue = String(value || '').trim().toLowerCase();
+  const normalizedValue = normalizeValue(value);
   return allowedValues.includes('*') || allowedValues.includes(normalizedValue);
 }
 
 function isActive(value) {
   if (value === true) return true;
-  return ['да', 'так'].includes(String(value || '').trim().toLowerCase());
+  return ['да', 'так'].includes(normalizeValue(value));
 }
 
 function normalizeTelegramId(value) {
@@ -28,7 +38,7 @@ function normalizeTelegramId(value) {
 }
 
 function normalizeHeader(value) {
-  return String(value || '').trim().toLocaleLowerCase();
+  return normalizeValue(value);
 }
 
 function activeColumnIndex(headers) {

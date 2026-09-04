@@ -187,4 +187,12 @@ describe("getNewRequestsByCategory", () => {
 
     await expect(getNewRequestsByCategory(["*"], ["*"])).resolves.toHaveLength(1);
   });
+
+  it("ignores invisible characters in category, city, and status", async () => {
+    sheetsClient.getRows.mockResolvedValue([
+      ["R1", "", "", "", "", "", "Електрика\u00a0", "", "Суми\u200b", "", "", "Отримана від клієнта "],
+    ]);
+
+    await expect(getNewRequestsByCategory("Електрика", "Суми")).resolves.toHaveLength(1);
+  });
 });
