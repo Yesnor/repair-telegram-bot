@@ -23,6 +23,11 @@ const { t } = require("./i18n");
 const CATEGORIES = t("categories");
 
 const BOT_COMMANDS = [{ command: "start", description: t("commandStart") }];
+const EMPLOYEE_COMMANDS = [
+  ...BOT_COMMANDS,
+  { command: "newrequests", description: t("employee.menuNew") },
+  { command: "myrequests", description: t("employee.menuMine") },
+];
 
 const WORK_PHOTO_REMINDER =
   t("workPhotoReminder");
@@ -396,9 +401,16 @@ async function configureBotMenu() {
   await bot.telegram.setMyCommands(BOT_COMMANDS);
 }
 
+async function configureChatMenu(chatId, commands) {
+  await bot.telegram.setMyCommands(commands, {
+    scope: { type: "chat", chat_id: chatId },
+  });
+}
+
 bot.start(async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (employee) {
+    await configureChatMenu(ctx.chat.id, EMPLOYEE_COMMANDS);
     await ctx.reply(
       t("employee.greeting", employee),
       employeeMenuKeyboard(),
@@ -406,6 +418,7 @@ bot.start(async (ctx) => {
     return;
   }
 
+  await configureChatMenu(ctx.chat.id, BOT_COMMANDS);
   await ctx.reply(
     t("employee.welcome"),
     Markup.inlineKeyboard([
@@ -824,4 +837,12 @@ bot.catch((err, ctx) => {
   console.error(`Ошибка при обработке update ${ctx.updateType}:`, err);
 });
 
-module.exports = { bot, categoryKeyboard, cityKeyboard, configureBotMenu, BOT_COMMANDS };
+module.exports = {
+  bot,
+  categoryKeyboard,
+  cityKeyboard,
+  configureBotMenu,
+  configureChatMenu,
+  BOT_COMMANDS,
+  EMPLOYEE_COMMANDS,
+};
