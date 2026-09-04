@@ -1,4 +1,4 @@
-const { getRows } = require('./sheetsClient');
+const { getSheetData } = require('./sheetsClient');
 const { t } = require('./i18n');
 
 const SHEET = t('sheetNames.employees');
@@ -16,6 +16,7 @@ function matches(value, allowedValues) {
 }
 
 function isActive(value) {
+  if (value === true) return true;
   return ['да', 'так'].includes(String(value || '').trim().toLowerCase());
 }
 
@@ -26,12 +27,24 @@ function normalizeTelegramId(value) {
     .replace(/\.0$/, '');
 }
 
+function normalizeHeader(value) {
+  return String(value || '').trim().toLocaleLowerCase();
+}
+
+function activeColumnIndex(headers) {
+  return headers.findIndex((header) =>
+    ['активний (так/ні)', 'активен (да/нет)'].includes(normalizeHeader(header)),
+  );
+}
+
 async function getEmployeeByTelegramId(telegramId) {
-  const rows = await getRows(SHEET);
+  const { headers, rows } = await getSheetData(SHEET);
+  const activeColumn = activeColumnIndex(headers);
+  if (activeColumn === -1) return null;
   const row = rows.find(
     (item) =>
       normalizeTelegramId(item[0]) === normalizeTelegramId(telegramId) &&
-      isActive(item[5]),
+      isActive(item[activeColumn]),
   );
   if (!row) return null;
 
@@ -50,13 +63,15 @@ async function getEmployeeByTelegramId(telegramId) {
 }
 
 async function getActiveEmployeesByCategory(category, city) {
-  const rows = await getRows(SHEET);
+  const { headers, rows } = await getSheetData(SHEET);
+  const activeColumn = activeColumnIndex(headers);
+  if (activeColumn === -1) return [];
   return rows
     .filter((row) => {
       const categories = parseList(row[3]);
       const cities = parseList(row[4]);
       return (
-        isActive(row[5]) &&
+        isActive(row[activeColumn]) &&
         matches(category, categories) &&
         matches(city, cities)
       );

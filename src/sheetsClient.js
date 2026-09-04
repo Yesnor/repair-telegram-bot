@@ -114,6 +114,16 @@ async function appendRow(sheetName, row, options = {}) {
   }
 }
 
+async function getSheetData(sheetName) {
+  const sheets = await getSheets();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${sheetName}!A1:Z`,
+  });
+  const values = res.data.values || [];
+  return { headers: values[0] || [], rows: values.slice(1) };
+}
+
 /**
  * Полностью перезаписывает строку с указанным номером (1-based номер строки листа).
  */
@@ -137,4 +147,4 @@ async function updateCell(sheetName, rowNumber, columnNumber, value) {
   });
 }
 
-module.exports = { getSheets, getRows, appendRow, updateRow, updateCell, colLetter };
+module.exports = { getSheets, getRows, getSheetData, appendRow, updateRow, updateCell, colLetter };

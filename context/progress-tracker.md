@@ -44,6 +44,7 @@ Update this file after every meaningful implementation change.
 - Employee activity checks now accept both Russian `да` and Ukrainian `так`, restoring employee menus and notifications with Ukrainian headers.
 - Employee ID lookup now tolerates Google Sheets numeric formatting and a leading apostrophe, which can otherwise prevent `/start` from recognizing the employee.
 - Added per-chat Telegram commands for recognized employees (`/newrequests` and `/myrequests`); clients retain only `/start`.
+- Employee detection now locates the `Активний (так/ні)` header and checks `Так` only in that column.
 
 ## In Progress
 
