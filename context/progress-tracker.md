@@ -45,6 +45,7 @@ Update this file after every meaningful implementation change.
 - Employee ID lookup now tolerates Google Sheets numeric formatting and a leading apostrophe, which can otherwise prevent `/start` from recognizing the employee.
 - Added per-chat Telegram commands for recognized employees (`/newrequests` and `/myrequests`); clients retain only `/start`.
 - Employee detection now locates the `Активний (так/ні)` header and checks `Так` only in that column.
+- Employee-specific Telegram menu now shows `/start` without the client label.
 
 ## In Progress
 

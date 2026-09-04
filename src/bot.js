@@ -24,7 +24,7 @@ const CATEGORIES = t("categories");
 
 const BOT_COMMANDS = [{ command: "start", description: t("commandStart") }];
 const EMPLOYEE_COMMANDS = [
-  ...BOT_COMMANDS,
+  { command: "start", description: " " },
   { command: "newrequests", description: t("employee.menuNew") },
   { command: "myrequests", description: t("employee.menuMine") },
 ];
