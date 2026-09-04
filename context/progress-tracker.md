@@ -50,7 +50,8 @@ Update this file after every meaningful implementation change.
 
 ## In Progress
 
-- Focused city/category/Sheets tests pass: 3 suites, 8 tests.
+- Employee categories and cities are now read by their sheet headers, so `/newrequests` keeps matching requests after employee-sheet columns are reordered.
+- Focused employee/request tests pass: 2 suites, 14 tests.
 - Full `npm test` currently fails in 2 existing `tests/bot.test.js` expectations around employee status text and close prerequisites.
 
 ## Next Up

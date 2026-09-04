@@ -47,6 +47,16 @@ function activeColumnIndex(headers) {
   );
 }
 
+function columnIndex(headers, field, fallback) {
+  const index = headers.findIndex((header) => {
+    const normalized = normalizeHeader(header);
+    if (field === "category") return normalized.includes("категор") || normalized.includes("категорі");
+    if (field === "city") return normalized.includes("город") || normalized.includes("міст");
+    return false;
+  });
+  return index === -1 ? fallback : index;
+}
+
 async function getEmployeeByTelegramId(telegramId) {
   const { headers, rows } = await getSheetData(SHEET);
   const activeColumn = activeColumnIndex(headers);
@@ -58,16 +68,18 @@ async function getEmployeeByTelegramId(telegramId) {
   );
   if (!row) return null;
 
-  const categories = parseList(row[3]);
-  const cities = parseList(row[4]);
+  const categoryColumn = columnIndex(headers, "category", 3);
+  const cityColumn = columnIndex(headers, "city", 4);
+  const categories = parseList(row[categoryColumn]);
+  const cities = parseList(row[cityColumn]);
   return {
     telegramId: row[0],
     telegramName: row[1] || '',
     name: row[2] || '',
-    category: row[3] || '',
+    category: row[categoryColumn] || '',
     categories,
     active: true,
-    city: row[4] || '',
+    city: row[cityColumn] || '',
     cities,
   };
 }
@@ -76,10 +88,12 @@ async function getActiveEmployeesByCategory(category, city) {
   const { headers, rows } = await getSheetData(SHEET);
   const activeColumn = activeColumnIndex(headers);
   if (activeColumn === -1) return [];
+  const categoryColumn = columnIndex(headers, "category", 3);
+  const cityColumn = columnIndex(headers, "city", 4);
   return rows
     .filter((row) => {
-      const categories = parseList(row[3]);
-      const cities = parseList(row[4]);
+      const categories = parseList(row[categoryColumn]);
+      const cities = parseList(row[cityColumn]);
       return (
         isActive(row[activeColumn]) &&
         matches(category, categories) &&
@@ -89,8 +103,8 @@ async function getActiveEmployeesByCategory(category, city) {
     .map((row) => ({
       telegramId: row[0],
       name: row[2] || '',
-      category: row[3] || '',
-      city: row[4] || '',
+      category: row[categoryColumn] || '',
+      city: row[cityColumn] || '',
     }));
 }
 

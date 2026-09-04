@@ -7,6 +7,17 @@ const headers = ["Telegram ID", "Telegram name", "Ім'я", "Категорії"
 
 beforeEach(() => jest.clearAllMocks());
 
+test("uses category and city columns by their headers", async () => {
+  const reorderedHeaders = [headers[0], headers[1], headers[2], headers[5], headers[4], headers[3]];
+  getSheetData.mockResolvedValue({ headers: reorderedHeaders, rows: [
+    ["42", "tg-name", "Anna", "Так", "Київ", "Електрика"],
+  ] });
+
+  await expect(getEmployeeByTelegramId(42)).resolves.toEqual(
+    expect.objectContaining({ categories: ["електрика"], cities: ["київ"] }),
+  );
+});
+
 test("возвращает сотрудника со списками категорий и городов", async () => {
   getSheetData.mockResolvedValue({ headers, rows: [
     ["42", "tg-name", "Анна", " Электрика; Сантехника ", " Киев; Львов ", " ДА "],
