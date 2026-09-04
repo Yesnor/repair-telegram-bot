@@ -1,4 +1,4 @@
-const mainLang = "ru"; // "ru" or "uk"
+const mainLang = "uk"; // "ru" or "uk"
 
 const SUPPORTED_LANGS = ["ru", "uk"];
 
