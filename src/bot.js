@@ -18,25 +18,14 @@ const {
 } = require("./employees");
 const { getActiveCities } = require("./cities");
 const { getActiveCategories } = require("./database");
+const { t } = require("./i18n");
 
-const CATEGORIES = [
-  "Электрика",
-  "Сантехника",
-  "Мебель",
-  "Металлоконструкции",
-  "Отделка",
-  "Реклама",
-  "Отопление",
-  "Генератор",
-  "Холодильное оборудование",
-  "Отопление",
-  "Другое",
-];
+const CATEGORIES = t("categories");
 
-const BOT_COMMANDS = [{ command: "start", description: "Оставить заявку" }];
+const BOT_COMMANDS = [{ command: "start", description: t("commandStart") }];
 
 const WORK_PHOTO_REMINDER =
-  "  Не забудьте на месте сделать фотоподтверждение выполненных работ!!!";
+  t("workPhotoReminder");
 
 function categoryKeyboard(categories = CATEGORIES) {
   return Markup.inlineKeyboard(
@@ -68,7 +57,7 @@ const requestWizard = new Scenes.WizardScene(
   // Шаг 1: выбор категории
   async (ctx) => {
     const categories = await getActiveCategories();
-    await ctx.reply("Выберите категорию услуги:", categoryKeyboard(categories));
+    await ctx.reply(t("request.chooseCategory"), categoryKeyboard(categories));
     return ctx.wizard.next();
   },
 
@@ -76,77 +65,77 @@ const requestWizard = new Scenes.WizardScene(
   async (ctx) => {
     if (!ctx.callbackQuery || !ctx.callbackQuery.data?.startsWith("cat:")) {
       await ctx.reply(
-        "Пожалуйста, выберите категорию, нажав на одну из кнопок выше.",
+        t("request.chooseCategoryButton"),
       );
       return;
     }
     const category = ctx.callbackQuery.data.replace("cat:", "");
     ctx.wizard.state.data = { category };
     await ctx.answerCbQuery();
-    await ctx.reply("Назовите имя заказчика согласно договору");
+    await ctx.reply(t("request.customerName"));
     return ctx.wizard.next();
   },
 
   // Шаг 3: имя заказчика -> просим описание
   async (ctx) => {
     if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, укажите имя заказчика.");
+      await ctx.reply(t("request.customerNameRequired"));
       return;
     }
     ctx.wizard.state.data.client = ctx.message.text;
-    await ctx.reply("Опишите проблему коротко:");
+    await ctx.reply(t("request.describeProblem"));
     return ctx.wizard.next();
   },
 
   // Шаг 4: описание -> просим город
   async (ctx) => {
     if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, опишите проблему.");
+      await ctx.reply(t("request.descriptionRequired"));
       return;
     }
     ctx.wizard.state.data.description = ctx.message.text;
     const cities = await getActiveCities();
     if (!cities.length) {
-      await ctx.reply("Список городов пока не настроен. Попробуйте позже.");
+      await ctx.reply(t("request.citiesUnavailable"));
       return;
     }
-    await ctx.reply("Выберите свой город:", cityKeyboard(cities));
+    await ctx.reply(t("request.chooseCity"), cityKeyboard(cities));
     return ctx.wizard.next();
   },
 
   // Шаг 5: город выбран -> просим адрес
   async (ctx) => {
     if (!ctx.callbackQuery?.data?.startsWith("city:")) {
-      await ctx.reply("Пожалуйста, выберите город одной из кнопок выше.");
+      await ctx.reply(t("request.chooseCityButton"));
       return;
     }
     ctx.wizard.state.data.city = ctx.callbackQuery.data.replace("city:", "");
     await ctx.answerCbQuery();
-    await ctx.reply("Укажите адрес, куда нужно приехать мастеру:");
+    await ctx.reply(t("request.address"));
     return ctx.wizard.next();
   },
 
   // Шаг 6: адрес -> просим срок исполнения
   async (ctx) => {
     if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, укажите адрес.");
+      await ctx.reply(t("request.addressRequired"));
       return;
     }
     ctx.wizard.state.data.address = ctx.message.text;
-    await ctx.reply("Укажите крайний срок выполнения работ");
+    await ctx.reply(t("request.deadline"));
     return ctx.wizard.next();
   },
 
   // Шаг 7: срок исполнения -> просим телефон
   async (ctx) => {
     if (!ctx.message?.text) {
-      await ctx.reply("Пожалуйста, укажите удобное время.");
+      await ctx.reply(t("request.deadlineRequired"));
       return;
     }
     ctx.wizard.state.data.convenientTime = ctx.message.text;
     await ctx.reply(
-      "Укажите контактный телефон (можно отправить кнопкой ниже):",
-      Markup.keyboard([Markup.button.contactRequest("📱 Отправить мой номер")])
+      t("request.phone"),
+      Markup.keyboard([Markup.button.contactRequest(t("request.sendPhone"))])
         .oneTime()
         .resize(),
     );
@@ -158,7 +147,7 @@ const requestWizard = new Scenes.WizardScene(
     const phone = ctx.message?.contact?.phone_number || ctx.message?.text;
     if (!phone) {
       await ctx.reply(
-        'Пожалуйста, укажите телефон текстом или кнопкой "Отправить мой номер".',
+        t("request.phoneRequired"),
       );
       return;
     }
@@ -181,10 +170,7 @@ const requestWizard = new Scenes.WizardScene(
     });
 
     await ctx.reply(
-      `Заявка №${request.id} принята!\n` +
-        `Категория: ${request.category}\n` +
-        `Адрес: ${request.address}\n\n` +
-        `Мы сообщим вам, как только мастер возьмёт заявку в работу.`,
+      t("request.accepted", request),
       Markup.removeKeyboard(),
     );
 
@@ -215,16 +201,9 @@ async function notifyEmployees(ctx, requestData, excludeEmployeeIds = []) {
     try {
       const msg = await ctx.telegram.sendMessage(
         emp.telegramId,
-        `🆕 Новая заявка №${requestData.id}\n` +
-          `Категория: ${requestData.category}\n` +
-          `Город: ${requestData.city}\n` +
-          `Адрес: ${requestData.address}\n` +
-          `Описание: ${requestData.description}\n` +
-          `Срок исполнения: ${requestData.convenientTime}\n` +
-          `Клиент: ${requestData.client}\n` +
-          `Телефон клиента: ${requestData.phone}`,
+        t("request.new", { ...requestData, deadline: requestData.convenientTime }),
         Markup.inlineKeyboard([
-          Markup.button.callback("Взять в работу", `take:${requestData.id}`),
+          Markup.button.callback(t("request.take"), `take:${requestData.id}`),
         ]),
       );
       notified.push({ chatId: emp.telegramId, messageId: msg.message_id });
@@ -250,25 +229,25 @@ function requestCompletionKeyboard(requestId, data = {}) {
   return Markup.inlineKeyboard([
     [
       Markup.button.callback(
-        `${hasDescription ? "✅" : ""}Введите описание работ`,
+        `${hasDescription ? "✅" : ""}${t("completion.descriptionButton")}`,
         `work-description:${requestId}`,
       ),
     ],
     [
       Markup.button.callback(
-        `${hasMaterialCost ? "✅" : ""}Введите сумму затрат на материалы`,
+        `${hasMaterialCost ? "✅" : ""}${t("completion.costButton")}`,
         `material-cost:${requestId}`,
       ),
     ],
     [
       Markup.button.callback(
-        `${hasFiles ? "✅" : "\u{1F4CE}"} Отправить файлы`,
+        `${hasFiles ? "✅" : "\u{1F4CE}"} ${t("completion.filesButton")}`,
         `upload:${requestId}`,
       ),
     ],
     [
       Markup.button.callback(
-        "\u2611\uFE0F Закрыть заявку",
+        t("completion.closeButton"),
         `close:${requestId}`,
       ),
     ],
@@ -277,8 +256,8 @@ function requestCompletionKeyboard(requestId, data = {}) {
 
 function employeeMenuKeyboard() {
   return Markup.inlineKeyboard([
-    [Markup.button.callback("🆕 Заявки моей категории", "menu:new")],
-    [Markup.button.callback("✅ Мои принятые заявки", "menu:mine")],
+    [Markup.button.callback(t("employee.menuNew"), "menu:new")],
+    [Markup.button.callback(t("employee.menuMine"), "menu:mine")],
   ]);
 }
 
@@ -289,22 +268,16 @@ async function showNewCategoryRequests(ctx, employee) {
     employee.cities?.length ? employee.cities : employee.city,
   );
   if (!found.length) {
-    await ctx.reply("Новых заявок в вашей категории пока нет.");
+    await ctx.reply(t("request.noNew"));
     return;
   }
 
   for (const { rowNumber, data } of found) {
     const msg = await ctx.telegram.sendMessage(
       ctx.chat.id,
-      `🆕 Заявка №${data.id}\n` +
-        `Категория: ${data.category}\n` +
-        `Адрес: ${data.address}\n` +
-        `Описание: ${data.description}\n` +
-        `Срок исполнения: ${data.convenientTime}\n` +
-        `Клиент: ${data.client}\n` +
-        `Телефон клиента: ${data.phone}`,
+      t("request.new", { ...data, deadline: data.convenientTime }),
       Markup.inlineKeyboard([
-        Markup.button.callback("Взять в работу", `take:${data.id}`),
+        Markup.button.callback(t("request.take"), `take:${data.id}`),
       ]),
     );
 
@@ -326,36 +299,36 @@ async function showNewCategoryRequests(ctx, employee) {
 async function showMyAcceptedRequests(ctx, employee) {
   const found = await getActiveRequestsByEmployee(employee.telegramId);
   if (!found.length) {
-    await ctx.reply("У вас нет принятых заявок в работе.");
+    await ctx.reply(t("request.noMine"));
     return;
   }
 
   for (const { data } of found) {
     const text =
-      `Заявка №${data.id}\n` +
-      `Статус: ${data.status}\n` +
-      `Категория: ${data.category}\n` +
-      `Адрес: ${data.address}\n` +
-      `Описание: ${data.description}\n` +
-      `Телефон клиента: ${data.phone}`;
+      `${t("fields.id")}${data.id}\n` +
+      `${t("fields.status")}: ${data.status}\n` +
+      `${t("fields.category")}: ${data.category}\n` +
+      `${t("fields.address")}: ${data.address}\n` +
+      `${t("fields.description")}: ${data.description}\n` +
+      `${t("fields.phone")}: ${data.phone}`;
 
     let buttons =
       data.status === STATUS.TAKEN
         ? [
-            [Markup.button.callback("🚗 Выехал на место", `depart:${data.id}`)],
+            [Markup.button.callback(t("buttons.departed"), `depart:${data.id}`)],
             [
               Markup.button.callback(
-                "↩️ Отказаться от заявки",
+                t("buttons.decline"),
                 `decline:${data.id}`,
               ),
             ],
           ]
-        : [[Markup.button.callback("☑️ Закрыть заявку", `close:${data.id}`)]];
+        : [[Markup.button.callback(t("completion.closeButton"), `close:${data.id}`)]];
 
     if (data.status === STATUS.DEPARTED) {
       buttons.unshift([
         Markup.button.callback(
-          "\u{1F4CE} Отправить файлы",
+          `\u{1F4CE} ${t("completion.filesButton")}`,
           `upload:${data.id}`,
         ),
       ]);
@@ -427,19 +400,16 @@ bot.start(async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (employee) {
     await ctx.reply(
-      `Здравствуйте, ${employee.name}!\n` +
-        `Вы закреплены за категорией «${employee.category}». ` +
-        `Новые заявки этой категории будут приходить сюда автоматически.\n\n` +
-        `Также можно посмотреть заявки вручную:`,
+      t("employee.greeting", employee),
       employeeMenuKeyboard(),
     );
     return;
   }
 
   await ctx.reply(
-    "Здравствуйте! Я помогу оформить заявку на ремонт (электрика, сантехника, другое).",
+    t("employee.welcome"),
     Markup.inlineKeyboard([
-      Markup.button.callback("📝 Оставить заявку", "new_request"),
+      Markup.button.callback(`📝 ${t("commandStart")}`, "new_request"),
     ]),
   );
 });
@@ -453,7 +423,7 @@ bot.action("new_request", async (ctx) => {
 bot.action("menu:new", async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (!employee) {
-    await ctx.answerCbQuery("Вы не зарегистрированы как сотрудник.", {
+    await ctx.answerCbQuery(t("employee.notRegistered"), {
       show_alert: true,
     });
     return;
@@ -465,7 +435,7 @@ bot.action("menu:new", async (ctx) => {
 bot.action("menu:mine", async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (!employee) {
-    await ctx.answerCbQuery("Вы не зарегистрированы как сотрудник.", {
+    await ctx.answerCbQuery(t("employee.notRegistered"), {
       show_alert: true,
     });
     return;
@@ -479,7 +449,7 @@ bot.command("newrequests", async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (!employee) {
     await ctx.reply(
-      "Эта команда доступна только зарегистрированным сотрудникам.",
+      t("employee.commandOnly"),
     );
     return;
   }
@@ -490,7 +460,7 @@ bot.command("myrequests", async (ctx) => {
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (!employee) {
     await ctx.reply(
-      "Эта команда доступна только зарегистрированным сотрудникам.",
+      t("employee.commandOnly"),
     );
     return;
   }
@@ -501,7 +471,7 @@ bot.action(/^take:(.+)$/, async (ctx) => {
   const requestId = ctx.match[1];
   const employee = await getEmployeeByTelegramId(ctx.from.id);
   if (!employee) {
-    await ctx.answerCbQuery("Вы не зарегистрированы как сотрудник.", {
+    await ctx.answerCbQuery(t("employee.notRegistered"), {
       show_alert: true,
     });
     return;
@@ -509,17 +479,17 @@ bot.action(/^take:(.+)$/, async (ctx) => {
 
   const found = await findRequestById(requestId);
   if (!found) {
-    await ctx.answerCbQuery("Заявка не найдена.", { show_alert: true });
+    await ctx.answerCbQuery(t("employee.notFound"), { show_alert: true });
     return;
   }
 
   if (found.data.status !== STATUS.NEW) {
-    await ctx.answerCbQuery("Заявка уже взята другим сотрудником.", {
+    await ctx.answerCbQuery(t("employee.alreadyTaken"), {
       show_alert: true,
     });
     try {
       await ctx.editMessageText(
-        `${ctx.callbackQuery.message.text}\n\n⛔ Заявка уже взята другим сотрудником.`,
+        `${ctx.callbackQuery.message.text}\n\n⛔ ${t("employee.alreadyTaken")}`,
       );
     } catch {}
     return;
@@ -531,14 +501,14 @@ bot.action(/^take:(.+)$/, async (ctx) => {
   found.data.takenAt = formatTimestamp();
   await saveRequest(found.rowNumber, found.data);
 
-  await ctx.answerCbQuery("Заявка взята в работу!");
+  await ctx.answerCbQuery(t("employee.takenAlert"));
   await ctx.editMessageText(
-    `${ctx.callbackQuery.message.text}\n\n✅ Вы взяли заявку в работу.\n\n${WORK_PHOTO_REMINDER}`,
+    `${ctx.callbackQuery.message.text}\n\n${t("employee.taken")}\n\n${WORK_PHOTO_REMINDER}`,
     Markup.inlineKeyboard([
-      [Markup.button.callback("🚗 Выехал на место", `depart:${requestId}`)],
+      [Markup.button.callback(t("buttons.departed"), `depart:${requestId}`)],
       [
         Markup.button.callback(
-          "↩️ Отказаться от заявки",
+          t("buttons.decline"),
           `decline:${requestId}`,
         ),
       ],
@@ -548,13 +518,13 @@ bot.action(/^take:(.+)$/, async (ctx) => {
   await notifyClient(
     ctx,
     found.data,
-    `Ваша заявка №${requestId} взята в работу.`,
+    t("notifications.taken", { id: requestId }),
   );
   await markOtherNotifications(
     ctx,
     found.data,
     employee.telegramId,
-    "Заявка уже взята другим сотрудником.",
+    t("employee.alreadyTaken"),
   );
 });
 
@@ -568,7 +538,7 @@ bot.action(/^depart:(.+)$/, async (ctx) => {
     !employee ||
     String(found.data.employeeId) !== String(employee.telegramId)
   ) {
-    await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    await ctx.answerCbQuery(t("employee.unavailable"), { show_alert: true });
     return;
   }
 
@@ -577,22 +547,22 @@ bot.action(/^depart:(.+)$/, async (ctx) => {
   found.data.materialCost = await getMaterialCost(requestId);
   await saveRequest(found.rowNumber, found.data);
 
-  await ctx.answerCbQuery("Отмечено: выехал на место.");
+  await ctx.answerCbQuery(t("employee.departedAlert"));
   await ctx.editMessageText(
-    `${ctx.callbackQuery.message.text}\n\n🚗 Мастер выехал на место.`,
+    `${ctx.callbackQuery.message.text}\n\n${t("employee.departed")}`,
     Markup.inlineKeyboard([
-      [Markup.button.callback("☑️ Закрыть заявку", `close:${requestId}`)],
+      [Markup.button.callback(t("completion.closeButton"), `close:${requestId}`)],
     ]),
   );
   await ctx.reply(
-    "Можно добавить документы к заявке:",
+    t("completion.filesPrompt"),
     requestCompletionKeyboard(requestId, found.data),
   );
 
   await notifyClient(
     ctx,
     found.data,
-    `Мастер выехал на адрес по заявке №${requestId}.`,
+    t("notifications.departed", { id: requestId }),
   );
 });
 
@@ -607,7 +577,7 @@ bot.action(/^upload:(.+)$/, async (ctx) => {
     String(found.data.employeeId) !== String(employee.telegramId) ||
     found.data.status !== STATUS.DEPARTED
   ) {
-    await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    await ctx.answerCbQuery(t("employee.unavailable"), { show_alert: true });
     return;
   }
 
@@ -616,9 +586,7 @@ bot.action(/^upload:(.+)$/, async (ctx) => {
   ctx.session.uploadFolderLink = "";
   found.data.materialCost = await getMaterialCost(requestId);
   await ctx.answerCbQuery();
-  await ctx.reply(
-    `Отправьте фотографии или документы по заявке №${requestId}. Можно отправить несколько файлов подряд.`,
-  );
+  await ctx.reply(t("completion.uploadPrompt", { id: requestId }));
 });
 
 async function prepareCompletionInput(ctx, requestId, field, prompt) {
@@ -630,7 +598,7 @@ async function prepareCompletionInput(ctx, requestId, field, prompt) {
     String(found.data.employeeId) !== String(employee.telegramId) ||
     found.data.status !== STATUS.DEPARTED
   ) {
-    await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    await ctx.answerCbQuery(t("employee.unavailable"), { show_alert: true });
     return;
   }
 
@@ -644,7 +612,7 @@ bot.action(/^work-description:(.+)$/, async (ctx) => {
     ctx,
     ctx.match[1],
     "description",
-    "Введите описание выполненных работ:",
+    t("completion.descriptionPrompt"),
   );
 });
 
@@ -653,7 +621,7 @@ bot.action(/^material-cost:(.+)$/, async (ctx) => {
     ctx,
     ctx.match[1],
     "materialCost",
-    "Введите сумму затрат на материалы:",
+    t("completion.costPrompt"),
   );
 });
 
@@ -663,7 +631,7 @@ bot.on("text", async (ctx, next) => {
 
   const value = ctx.message.text.trim();
   if (!value) {
-    await ctx.reply("Введите значение текстом.");
+    await ctx.reply(t("completion.textRequired"));
     return;
   }
 
@@ -671,7 +639,7 @@ bot.on("text", async (ctx, next) => {
     input.field === "materialCost" &&
     !Number.isFinite(Number(value.replace(",", ".")))
   ) {
-    await ctx.reply("Введите сумму цифрами!");
+    await ctx.reply(t("completion.costNumber"));
     return;
   }
 
@@ -684,7 +652,7 @@ bot.on("text", async (ctx, next) => {
     found.data.status !== STATUS.DEPARTED
   ) {
     delete ctx.session.completionInput;
-    await ctx.reply("Ввод данных недоступен для этой заявки.");
+    await ctx.reply(t("completion.inputUnavailable"));
     return;
   }
 
@@ -700,8 +668,8 @@ bot.on("text", async (ctx, next) => {
   delete ctx.session.completionInput;
   await ctx.reply(
     input.field === "description"
-      ? "Описание работ сохранено"
-      : "Сумма затрат сохранена",
+      ? t("completion.descriptionSaved")
+      : t("completion.costSaved"),
     requestCompletionKeyboard(input.requestId, found.data),
   );
 });
@@ -721,7 +689,7 @@ bot.on(["photo", "document"], async (ctx) => {
     delete ctx.session.uploadRequestId;
     delete ctx.session.uploadFolderId;
     delete ctx.session.uploadFolderLink;
-    await ctx.reply("Загрузка файлов недоступна для этой заявки.");
+    await ctx.reply(t("completion.uploadUnavailable"));
     return;
   }
 
@@ -763,7 +731,7 @@ bot.on(["photo", "document"], async (ctx) => {
     }
 
     await ctx.reply(
-      "Файл загружен. Отправьте следующий файл или нажмите «Закрыть заявку».",
+      t("completion.uploaded"),
       requestCompletionKeyboard(requestId, found.data),
     );
   } catch (err) {
@@ -773,7 +741,7 @@ bot.on(["photo", "document"], async (ctx) => {
       response: err.response?.data,
       stack: err.stack,
     });
-    await ctx.reply("Не удалось загрузить файл. Попробуйте ещё раз.");
+    await ctx.reply(t("completion.uploadFailed"));
   }
 });
 
@@ -787,14 +755,14 @@ bot.action(/^close:(.+)$/, async (ctx) => {
     !employee ||
     String(found.data.employeeId) !== String(employee.telegramId)
   ) {
-    await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    await ctx.answerCbQuery(t("employee.unavailable"), { show_alert: true });
     return;
   }
 
   const materialCost = await getMaterialCost(requestId);
   if (!String(found.data.photosLink || "").trim()) {
     await ctx.answerCbQuery();
-    await ctx.reply("Прикрепите файлы!");
+    await ctx.reply(t("completion.filesRequired"));
     return;
   }
   if (
@@ -802,7 +770,7 @@ bot.action(/^close:(.+)$/, async (ctx) => {
     !String(materialCost || "").trim()
   ) {
     await ctx.answerCbQuery();
-    await ctx.reply("Введите сумму затрат на материалы и описание работ!");
+    await ctx.reply(t("completion.dataRequired"));
     return;
   }
 
@@ -810,16 +778,16 @@ bot.action(/^close:(.+)$/, async (ctx) => {
   found.data.closedAt = formatTimestamp();
   await saveRequest(found.rowNumber, found.data);
 
-  await ctx.answerCbQuery("Заявка закрыта.");
+  await ctx.answerCbQuery(t("employee.closed"));
   delete ctx.session.uploadRequestId;
   delete ctx.session.uploadFolderId;
   delete ctx.session.uploadFolderLink;
-  await ctx.editMessageText(`✅ Заявка ${requestId} закрыта`);
+  await ctx.editMessageText(t("employee.closedText", { id: requestId }));
 
   await notifyClient(
     ctx,
     found.data,
-    `Заявка №${requestId} выполнена и закрыта. Спасибо, что обратились к нам!`,
+    t("notifications.closed", { id: requestId }),
   );
 });
 
@@ -833,7 +801,7 @@ bot.action(/^decline:(.+)$/, async (ctx) => {
     !employee ||
     String(found.data.employeeId) !== String(employee.telegramId)
   ) {
-    await ctx.answerCbQuery("Недоступно.", { show_alert: true });
+    await ctx.answerCbQuery(t("employee.unavailable"), { show_alert: true });
     return;
   }
 
@@ -843,9 +811,9 @@ bot.action(/^decline:(.+)$/, async (ctx) => {
   found.data.takenAt = "";
   await saveRequest(found.rowNumber, found.data);
 
-  await ctx.answerCbQuery("Вы отказались от заявки.");
+  await ctx.answerCbQuery(t("employee.declined"));
   await ctx.editMessageText(
-    `${ctx.callbackQuery.message.text}\n\n↩️ Вы отказались от заявки. Она возвращена в общий пул.`,
+    `${ctx.callbackQuery.message.text}\n\n${t("employee.declinedNote")}`,
   );
 
   // Заявка снова уходит всем сотрудникам категории, кроме отказавшегося

@@ -1,15 +1,16 @@
 const { formatTimestamp } = require("./dateUtils");
 const { getRows, appendRow, updateRow, updateCell } = require("./sheetsClient");
 const { incrementRequestCount } = require("./database");
+const { t } = require("./i18n");
 
 const SHEET = "Заявки";
 const PAYMENTS_SHEET = "Оплата та розрахунки";
 
 const STATUS = {
-  NEW: "Получена от клиента",
-  TAKEN: "Взята в работу",
-  DEPARTED: "Выехал на место",
-  CLOSED: "Закрыта",
+  NEW: t("status.new"),
+  TAKEN: t("status.taken"),
+  DEPARTED: t("status.departed"),
+  CLOSED: t("status.closed"),
 };
 
 // Порядок колонок листа "Заявки" — должен совпадать с заголовком в таблице.

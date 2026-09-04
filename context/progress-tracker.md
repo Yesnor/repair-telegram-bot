@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Add a Telegram bot menu button for `/start` with the visible label `Старт`.
+- Keep the bot UI and Google Sheets headers/status values in one code-selected language via `mainLang`.
 
 ## Completed
 
@@ -37,6 +37,9 @@ Update this file after every meaningful implementation change.
 - New request rows in `Заявки` now clear inherited Google Sheets formatting after append.
 - Replaced the `Города` sheet with a `Database` sheet containing city status, category names, and category codes; client category buttons now load from `Список категорий`.
 - Changed the `Сотрудники` sheet to store one row per employee with semicolon-separated `Категории` and `Города`; `*` matches all categories or cities.
+- Added code-selected Russian/Ukrainian localization through `src/config.js`, `src/i18n.js`, and `src/locales`.
+- Localized bot messages, buttons, notifications, request statuses, and `init-sheets.js` headers using `mainLang`.
+- Updated the fallback Russian/Ukrainian category lists to the current 10 service categories.
 
 ## In Progress
 
@@ -55,6 +58,7 @@ Update this file after every meaningful implementation change.
 ## Architecture Decisions
 
 - Store one employee per row; keep multiple categories and cities as semicolon-separated values, with `*` representing all. This avoids duplicate employee rows and avoids category-city combinations.
+- Use one global language selected in code (`mainLang = "ru"` or `"uk"`) for all bot users; do not store per-user language preferences.
 
 ## Session Notes
 

@@ -1,56 +1,16 @@
 require("dotenv").config();
 const { google } = require("googleapis");
 const { createSheetsAuth } = require("../src/googleAuth");
+const { t } = require("../src/i18n");
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 const SHEETS = {
-  Заявки: [
-    "ID",
-    "Дата создания",
-    "Client Telegram ID",
-    "Client Telegram name",
-    "Клиент",
-    "Телефон",
-    "Категория",
-    "Описание",
-    "Город",
-    "Адрес",
-    "Срок исполнения",
-    "Статус",
-    "Employee Telegram ID",
-    "Имя сотрудника",
-    "Дата приёма заявки",
-    "Дата выезда сотрудника по заявке",
-    "Дата закрытия заявки",
-    "NotifiedMessages (служебное)",
-    "Ссылки на фото документов",
-    "Work description added (служебное)",
-  ],
-  Сотрудники: ["Telegram ID", "Telegram name", "Имя", "Категории", "Города", "Активен (да/нет)"],
-  Database: [
-    "Город",
-    "Список категорий",
-    "Код категории",
-    "Количество заявок",
-  ],
-  "Оплата та розрахунки": [
-    "ID",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "Сума затрат на материалы",
-  ],
-  Sessions: [
-    "ChatKey (служебное)",
-    "StateJSON (служебное)",
-    "UpdatedAt (служебное)",
-  ],
+  Заявки: t("sheetHeaders.requests"),
+  Сотрудники: t("sheetHeaders.employees"),
+  Database: t("sheetHeaders.database"),
+  "Оплата та розрахунки": t("sheetHeaders.payments"),
+  Sessions: t("sheetHeaders.sessions"),
 };
 
 async function main() {

@@ -51,9 +51,9 @@ const telegramCallApiSpy = jest.spyOn(Telegram.prototype, "callApi");
 test("показывает каждую категорию отдельной строкой без обрезания текста", () => {
   const rows = categoryKeyboard().reply_markup.inline_keyboard;
 
-  expect(rows).toHaveLength(11);
+  expect(rows).toHaveLength(10);
   expect(rows.every((row) => row.length === 1)).toBe(true);
-  expect(rows.map(([button]) => button.text)).toContain("Холодильное оборудование");
+  expect(rows.map(([button]) => button.text)).toContain("Слесарно-механические работы");
 });
 
 test("registers start command in the bot menu", async () => {
