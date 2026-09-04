@@ -41,6 +41,7 @@ Update this file after every meaningful implementation change.
 - Localized bot messages, buttons, notifications, request statuses, and `init-sheets.js` headers using `mainLang`.
 - Updated the fallback Russian/Ukrainian category lists to the current 10 service categories.
 - Localized Google Sheets tab names; employee lookups now use `Співробітники` when `mainLang = "uk"`, fixing `/start` range parsing failures.
+- Employee activity checks now accept both Russian `да` and Ukrainian `так`, restoring employee menus and notifications with Ukrainian headers.
 
 ## In Progress
 

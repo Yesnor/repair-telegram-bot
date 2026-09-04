@@ -36,3 +36,13 @@ test("возвращает только активных сотрудников 
     { telegramId: "2", name: "Борис", category: "*", city: "*" },
   ]);
 });
+
+test("распознает украинское значение активного сотрудника Так", async () => {
+  getRows.mockResolvedValue([
+    ["42", "tg-name", "Анна", "Електрика", "Київ", "Так"],
+  ]);
+
+  await expect(getEmployeeByTelegramId(42)).resolves.toEqual(
+    expect.objectContaining({ telegramId: "42", active: true }),
+  );
+});

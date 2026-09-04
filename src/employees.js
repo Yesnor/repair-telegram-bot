@@ -15,12 +15,16 @@ function matches(value, allowedValues) {
   return allowedValues.includes('*') || allowedValues.includes(normalizedValue);
 }
 
+function isActive(value) {
+  return ['да', 'так'].includes(String(value || '').trim().toLowerCase());
+}
+
 async function getEmployeeByTelegramId(telegramId) {
   const rows = await getRows(SHEET);
   const row = rows.find(
     (item) =>
       String(item[0]) === String(telegramId) &&
-      String(item[5] || '').trim().toLowerCase() === 'да',
+      isActive(item[5]),
   );
   if (!row) return null;
 
@@ -45,7 +49,7 @@ async function getActiveEmployeesByCategory(category, city) {
       const categories = parseList(row[3]);
       const cities = parseList(row[4]);
       return (
-        String(row[5] || '').trim().toLowerCase() === 'да' &&
+        isActive(row[5]) &&
         matches(category, categories) &&
         matches(city, cities)
       );
