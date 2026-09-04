@@ -3,6 +3,7 @@ const ru = require("./ru");
 module.exports = {
   categories: ["Електрика", "Сантехніка+опалення", "Слюсарно-механічні роботи", "Оздоблювальні роботи", "Меблі", "Зварювальні роботи", "Генератори", "Холодильники", "Кондиціонери", "Інше"],
   ...ru,
+  sheetNames: { requests: "Заявки", employees: "Співробітники", database: "Database", payments: "Оплата та розрахунки", sessions: "Sessions" },
   commandStart: "Залишити заявку",
   workPhotoReminder: "  Не забудьте на місці зробити фотопідтвердження виконаних робіт!!!",
   request: {

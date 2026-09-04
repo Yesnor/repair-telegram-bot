@@ -6,11 +6,11 @@ const { t } = require("../src/i18n");
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 const SHEETS = {
-  Заявки: t("sheetHeaders.requests"),
-  Співробітники: t("sheetHeaders.employees"),
-  Database: t("sheetHeaders.database"),
-  "Оплата та розрахунки": t("sheetHeaders.payments"),
-  Sessions: t("sheetHeaders.sessions"),
+  [t("sheetNames.requests")]: t("sheetHeaders.requests"),
+  [t("sheetNames.employees")]: t("sheetHeaders.employees"),
+  [t("sheetNames.database")]: t("sheetHeaders.database"),
+  [t("sheetNames.payments")]: t("sheetHeaders.payments"),
+  [t("sheetNames.sessions")]: t("sheetHeaders.sessions"),
 };
 
 async function main() {

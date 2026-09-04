@@ -5,8 +5,9 @@
 
 const { getRows, appendRow, updateRow } = require('./sheetsClient');
 const { formatTimestamp } = require('./dateUtils');
+const { t } = require('./i18n');
 
-const SHEET = 'Sessions';
+const SHEET = t('sheetNames.sessions');
 
 async function findRow(key) {
   const rows = await getRows(SHEET);

@@ -3,8 +3,8 @@ const { getRows, appendRow, updateRow, updateCell } = require("./sheetsClient");
 const { incrementRequestCount } = require("./database");
 const { t } = require("./i18n");
 
-const SHEET = "Заявки";
-const PAYMENTS_SHEET = "Оплата та розрахунки";
+const SHEET = t("sheetNames.requests");
+const PAYMENTS_SHEET = t("sheetNames.payments");
 
 const STATUS = {
   NEW: t("status.new"),

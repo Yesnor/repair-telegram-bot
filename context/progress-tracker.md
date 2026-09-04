@@ -40,6 +40,7 @@ Update this file after every meaningful implementation change.
 - Added code-selected Russian/Ukrainian localization through `src/config.js`, `src/i18n.js`, and `src/locales`.
 - Localized bot messages, buttons, notifications, request statuses, and `init-sheets.js` headers using `mainLang`.
 - Updated the fallback Russian/Ukrainian category lists to the current 10 service categories.
+- Localized Google Sheets tab names; employee lookups now use `Співробітники` when `mainLang = "uk"`, fixing `/start` range parsing failures.
 
 ## In Progress
 

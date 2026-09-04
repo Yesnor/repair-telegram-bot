@@ -1,6 +1,7 @@
 const { getRows } = require('./sheetsClient');
+const { t } = require('./i18n');
 
-const SHEET = 'Сотрудники';
+const SHEET = t('sheetNames.employees');
 
 function parseList(value) {
   return String(value || '')
