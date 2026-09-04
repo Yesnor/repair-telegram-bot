@@ -42,6 +42,7 @@ Update this file after every meaningful implementation change.
 - Updated the fallback Russian/Ukrainian category lists to the current 10 service categories.
 - Localized Google Sheets tab names; employee lookups now use `Співробітники` when `mainLang = "uk"`, fixing `/start` range parsing failures.
 - Employee activity checks now accept both Russian `да` and Ukrainian `так`, restoring employee menus and notifications with Ukrainian headers.
+- Employee ID lookup now tolerates Google Sheets numeric formatting and a leading apostrophe, which can otherwise prevent `/start` from recognizing the employee.
 
 ## In Progress
 

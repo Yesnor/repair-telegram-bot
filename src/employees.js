@@ -19,11 +19,18 @@ function isActive(value) {
   return ['да', 'так'].includes(String(value || '').trim().toLowerCase());
 }
 
+function normalizeTelegramId(value) {
+  return String(value ?? '')
+    .trim()
+    .replace(/^'/, '')
+    .replace(/\.0$/, '');
+}
+
 async function getEmployeeByTelegramId(telegramId) {
   const rows = await getRows(SHEET);
   const row = rows.find(
     (item) =>
-      String(item[0]) === String(telegramId) &&
+      normalizeTelegramId(item[0]) === normalizeTelegramId(telegramId) &&
       isActive(item[5]),
   );
   if (!row) return null;

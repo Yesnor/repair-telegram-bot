@@ -39,10 +39,10 @@ test("возвращает только активных сотрудников 
 
 test("распознает украинское значение активного сотрудника Так", async () => {
   getRows.mockResolvedValue([
-    ["42", "tg-name", "Анна", "Електрика", "Київ", "Так"],
+    ["'42.0", "tg-name", "Анна", "Електрика", "Київ", "Так"],
   ]);
 
   await expect(getEmployeeByTelegramId(42)).resolves.toEqual(
-    expect.objectContaining({ telegramId: "42", active: true }),
+    expect.objectContaining({ telegramId: "'42.0", active: true }),
   );
 });
